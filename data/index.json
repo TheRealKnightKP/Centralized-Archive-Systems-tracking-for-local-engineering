@@ -14,7 +14,9 @@
       { "code": "L", "name": "Large-scale", "desc": "The largest vehicles" },
       { "code": "T", "name": "Tools", "desc": "Boosters and support" },
       { "code": "G", "name": "Ground", "desc": "Ground and surface vehicles" },
-      { "code": "R", "name": "Revolutionary", "desc": "Experimental technology" }
+      { "code": "R", "name": "Revolutionary", "desc": "Experimental technology" },
+      { "code": "M", "name": "Modular Expeditionary", "desc": "Whole-vehicle modularity; station kits" },
+      { "code": "D", "name": "Hub / Heavy / Deep-space", "desc": "Ground hubs, heavy atmospheric, orbital stations, deep-space vessels" }
     ]
   },
   "vehicles": [
@@ -22,9 +24,24 @@
     { "id": "ex2", "designation": "EX-2 Gawain", "class": "EX", "role": "Light tiltrotor hauler (5 t)", "status": "concept" },
     { "id": "ex3", "designation": "EX-3 Percival", "class": "EX", "role": "Orbital glide-return workhorse", "status": "concept" },
     { "id": "ex4", "designation": "EX-4 Galahad", "class": "EX", "role": "Crewed lunar ferry", "status": "concept" },
-    { "id": "gx04", "designation": "GX-04 Curiass", "class": "GX", "role": "Lunar descent/ascent lander", "status": "concept" },
-    { "id": "vx13", "designation": "VX-13", "class": "VX", "role": "Mid-class orbital (larger EX-3)", "status": "teased" },
+    { "id": "vx11", "designation": "VX-11 George", "class": "VX", "role": "Mobile stabilization clinic + scout", "status": "teased" },
+    { "id": "vx12", "designation": "VX-12 Andrew", "class": "VX", "role": "Dual-bay cargo courier", "status": "teased" },
+    { "id": "vx13", "designation": "VX-13 James", "class": "VX", "role": "Heavy orbital workhorse (larger EX-3)", "status": "teased" },
+    { "id": "vx14", "designation": "VX-14 Anthony", "class": "VX", "role": "Lunar outpost builder", "status": "teased" },
+    { "id": "lx21", "designation": "LX-21 Roland", "class": "LX", "role": "Mobile hospital / remote base", "status": "teased" },
+    { "id": "lx22", "designation": "LX-22 Turpin", "class": "LX", "role": "Fleet logistics powerhouse", "status": "teased" },
     { "id": "lx23", "designation": "LX-23 Ganelon", "class": "LX", "role": "Heavy orbital flagship", "status": "concept" },
-    { "id": "tx04", "designation": "TX-04 Pauldron", "class": "TX", "role": "Fleet-common reusable booster", "status": "concept" }
+    { "id": "lx24", "designation": "LX-24 Renaud", "class": "LX", "role": "Lunar long-stay base (potential Mars)", "status": "teased" },
+    { "id": "gx04", "designation": "GX-04 Curiass", "class": "GX", "role": "Lunar descent/ascent lander", "status": "concept" },
+    { "id": "tx03", "designation": "TX-03 Modular", "class": "TX", "role": "Transportable assembly crane", "status": "teased" },
+    { "id": "tx04", "designation": "TX-04 Pauldron", "class": "TX", "role": "Fleet-common reusable booster", "status": "concept" },
+    { "id": "mx72", "designation": "MX-72", "class": "MX", "role": "Full-vehicle modularity (EX scale)", "status": "teased" },
+    { "id": "mx74", "designation": "MX-74", "class": "MX", "role": "Full-vehicle modularity (VX scale)", "status": "teased" },
+    { "id": "mx77", "designation": "MX-77", "class": "MX", "role": "Full-vehicle modularity (LX scale)", "status": "teased" },
+    { "id": "mx79", "designation": "MX-79", "class": "MX", "role": "Modular orbital station kit / node", "status": "teased" },
+    { "id": "dx91", "designation": "DX-91 Godfrey", "class": "DX", "role": "Earth facilities hub", "status": "teased" },
+    { "id": "dx92", "designation": "DX-92 Hector", "class": "DX", "role": "Heavy atmospheric vehicle", "status": "teased" },
+    { "id": "dx93", "designation": "DX-93 Joshua", "class": "DX", "role": "High-orbit flagship station", "status": "teased" },
+    { "id": "dx94", "designation": "DX-94 Alexander", "class": "DX", "role": "Deep-space vessel", "status": "teased" }
   ]
 }
