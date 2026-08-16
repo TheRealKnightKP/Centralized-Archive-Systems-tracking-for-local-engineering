@@ -7,7 +7,7 @@
 <title>CASTLE — KnightShip Archive</title>
 <link rel="manifest" href="manifest.json">
 <style>
-  :root{ --navy:#1A3A5C; --orange:#C2820A; --grey:#55606E; --bg:#10161d; --panel:#18222d; --panel2:#1f2b38; --line:#2b3947; --text:#e7edf3; --dim:#9fb0c0; --good:#3a7d5d; }
+  :root{ --navy:#1A3A5C; --orange:#C2820A; --grey:#55606E; --bg:#10161d; --panel:#18222d; --panel2:#1f2b38; --line:#2b3947; --text:#e7edf3; --dim:#9fb0c0; }
   *{ box-sizing:border-box; }
   body{ margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); -webkit-text-size-adjust:100%; }
   header{ background:var(--navy); padding:14px 16px; display:flex; align-items:center; gap:10px; position:sticky; top:0; z-index:10; }
@@ -47,356 +47,277 @@
   .status{ font-size:12px; padding:4px 8px; border-radius:4px; margin:6px 0; display:none; }
   .status.show{ display:block; }
   .status.ok{ background:#16321f; color:#7fdca0; } .status.err{ background:#3a1616; color:#f0a0a0; }
-  /* IFO flat placeholder */
-  .ifo-stage{ background:linear-gradient(180deg,#0d1620,#12202c); border:1px solid var(--line); border-radius:10px; height:220px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
+  .ifo-stage{ background:linear-gradient(180deg,#0d1620,#12202c); border:1px solid var(--line); border-radius:10px; height:200px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
   .ifo-ship{ width:90px; height:44px; background:#243444; border:1px solid #35506a; border-radius:8px 22px 22px 8px; margin:0 8px; opacity:.55; }
   .ifo-dot{ width:9px;height:9px;border-radius:50%;background:var(--orange);display:inline-block;margin-right:6px;vertical-align:middle; }
-  .chip{ background:var(--panel2); border:1px solid var(--line); border-radius:16px; padding:6px 12px; font-size:12px; color:var(--dim); cursor:default; }
-  /* Horizontal timeline */
-  .tl-rail{ display:flex; gap:0; overflow-x:auto; padding:30px 6px 14px; position:relative; }
+  .chip{ background:var(--panel2); border:1px solid var(--line); border-radius:16px; padding:6px 12px; font-size:12px; color:var(--dim); }
+  .tl-rail{ display:flex; overflow-x:auto; padding:30px 6px 14px; position:relative; }
   .tl-rail::before{ content:''; position:absolute; left:0; right:0; top:44px; height:2px; background:var(--line); }
   .tl-node{ min-width:150px; position:relative; padding:0 10px; cursor:pointer; }
-  .tl-dot{ width:14px;height:14px;border-radius:50%;background:var(--navy);border:2px solid var(--orange); position:relative; z-index:1; margin:0 auto 8px; }
+  .tl-dot{ width:14px;height:14px;border-radius:50%;background:var(--navy);border:2px solid var(--orange); z-index:1; margin:0 auto 8px; }
   .tl-node:hover .tl-dot{ background:var(--orange); }
   .tl-date{ text-align:center; font-size:11px; color:var(--orange); margin-bottom:2px; }
   .tl-title{ text-align:center; font-size:12px; color:var(--text); line-height:1.3; }
+  #boot{ padding:14px; color:#9fb0c0; font-size:13px; }
 </style>
 </head>
 <body>
-<header><b>CASTLE</b><span>Centralized Archive &amp; Systems Tracking for Local Engineering</span></header>
+<header><b>CASTLE</b><span id="hspan">Centralized Archive &amp; Systems Tracking for Local Engineering</span></header>
 <nav id="nav"></nav>
-<main id="view"><p class="muted">Loading the keep…</p></main>
+<main id="view"><div id="boot">Loading the keep…</div></main>
 
+<!-- Supabase as a classic UMD script — NO ES module import that can silently kill the app. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-/* Global error surface — if the module below fails to load/parse, show it instead of a blank page. */
-window.addEventListener('error', e=>{ const v=document.getElementById('view'); if(v && !window.__castleBooted){ v.innerHTML='<div style="border-left:3px solid #C2820A;background:#20242a;padding:10px;border-radius:6px;color:#f0c98a">App error (v2 build): '+(e.message||e.error||'unknown')+'</div>'; } });
-window.addEventListener('unhandledrejection', e=>{ const v=document.getElementById('view'); if(v && !window.__castleBooted){ v.innerHTML='<div style="border-left:3px solid #C2820A;background:#20242a;padding:10px;border-radius:6px;color:#f0c98a">Load error (v2 build): '+((e.reason&&e.reason.message)||e.reason||'unknown')+'</div>'; } });
-</script>
-<script type="module">
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-console.log('CASTLE v2 build loaded');
+/* ============================================================
+   CASTLE v3 — every top-level action guarded. One failure in a
+   Supabase tab can NEVER blank the whole app. Fleet/vehicles/reports
+   work from repo JSON even if Supabase is completely unavailable.
+   ============================================================ */
+(function(){
+  "use strict";
+  var VERSION = 'v3';
+  var SUPABASE_URL = 'https://tvlkxrqrwjgfivwsbniu.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_Y9rEqbltp4G7BL0OjqxIQw_cj0v0INi';
+  var DATA_BASE = './data';
 
-/* ===== CONFIG ===== */
-const SUPABASE_URL = 'https://tvlkxrqrwjgfivwsbniu.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_Y9rEqbltp4G7BL0OjqxIQw_cj0v0INi';
-const DATA_BASE = './data';
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+  // Supabase client — created defensively. If the CDN script didn't load, sb stays null
+  // and Supabase-backed tabs show a clear message instead of crashing.
+  var sb = null, sbError = null;
+  try {
+    if (window.supabase && typeof window.supabase.createClient === 'function') {
+      sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    } else {
+      sbError = 'Supabase library did not load (CDN blocked or offline).';
+    }
+  } catch (e) { sbError = 'Supabase init failed: ' + (e && e.message ? e.message : e); }
 
-const state = { index:null, vehicles:{}, reports:null };
-const $ = (h)=>{ const t=document.createElement('template'); t.innerHTML=h.trim(); return t.content.firstChild; };
-const esc = (s)=> (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-async function loadJSON(p){ const r=await fetch(p,{cache:'no-store'}); if(!r.ok) throw new Error(p); return r.json(); }
+  var state = { index:null, reports:null, vehicles:{} };
+  function el(h){ var t=document.createElement('template'); t.innerHTML=(h||'').trim(); return t.content.firstChild; }
+  function esc(s){ return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function view(){ return document.getElementById('view'); }
+  function fail(msg){ view().innerHTML = '<div class="flag">'+esc(msg)+'</div>'; }
 
-async function boot(){
-  try{
-    state.index = await loadJSON(`${DATA_BASE}/index.json`);
-    state.reports = await loadJSON(`${DATA_BASE}/reports.json`).catch(()=>({reports:[]}));
-  }catch(e){
-    document.getElementById('view').innerHTML=`<div class="flag">Could not load <b>${DATA_BASE}/index.json</b>. (${esc(e.message)})</div>`; return;
+  function loadJSON(p){
+    return fetch(p,{cache:'no-store'}).then(function(r){ if(!r.ok) throw new Error(p+' → HTTP '+r.status); return r.json(); });
   }
-  window.__castleBooted = true;
-  const hdr=document.querySelector('header span'); if(hdr) hdr.textContent += '  ·  v2';
-  buildNav(); route('fleet');
-}
-const TABS=[['fleet','Fleet'],['ifo','IFO'],['reports','Reports'],['timeline','Timeline'],['architect','Architect'],['photos','Photos'],['data','Backup']];
-function buildNav(){ const nav=document.getElementById('nav'); nav.innerHTML=''; TABS.forEach(([id,l])=>{ const b=$(`<button data-tab="${id}">${l}</button>`); b.onclick=()=>route(id); nav.appendChild(b); }); }
-function setActive(t){ document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===t)); }
-function route(tab,arg){ setActive(tab); const v=document.getElementById('view'); window.scrollTo(0,0);
-  if(tab==='fleet') return arg?renderVehicle(v,arg):renderFleet(v);
-  if(tab==='ifo') return renderIFO(v);
-  if(tab==='reports') return renderReports(v);
-  if(tab==='timeline') return renderTimeline(v);
-  if(tab==='architect') return renderArchitect(v);
-  if(tab==='photos') return renderPhotos(v);
-  if(tab==='data') return renderData(v);
-}
 
-/* ---------- FLEET ---------- */
-function renderFleet(v){
-  const ix=state.index, byClass={};
-  ix.vehicles.forEach(x=>{ (byClass[x.class]=byClass[x.class]||[]).push(x); });
-  let h=`<h1>${esc(ix.castle.company)}</h1><p class="muted">${esc(ix.castle.motto)}</p><h2>Fleet</h2>`;
-  Object.keys(byClass).sort().forEach(cls=>{
-    const q=(ix.taxonomy.classes.find(c=>c.code===cls[0])||{}).name||'';
-    h+=`<h3>${esc(cls)} — ${esc(q)}</h3>`;
-    byClass[cls].forEach(x=>{ h+=`<div class="card click" data-id="${esc(x.id)}"><h3>${esc(x.designation)}</h3><div><span class="badge">${esc(x.class)}</span><span class="badge ${x.status==='teased'?'orange':''}">${esc(x.status)}</span> <span class="muted">${esc(x.role)}</span></div></div>`; });
-  });
-  h+=`<h2>Class taxonomy</h2><div class="kv">`;
-  ix.taxonomy.classes.forEach(c=> h+=`<dt>${esc(c.code)}X — ${esc(c.name)}</dt><dd class="muted">${esc(c.desc)}</dd>`);
-  h+=`</div><p class="muted" style="margin-top:8px">${esc(ix.taxonomy.note)}</p>`;
-  v.innerHTML=h; v.querySelectorAll('.card').forEach(c=>c.onclick=()=>route('fleet',c.dataset.id));
-}
-async function renderVehicle(v,id){
-  v.innerHTML=`<p class="muted">Loading ${esc(id)}…</p>`;
-  let d=state.vehicles[id];
-  if(!d){ try{ d=await loadJSON(`${DATA_BASE}/vehicles/${id}.json`); state.vehicles[id]=d; }catch(e){ v.innerHTML=`<span class="back">← Fleet</span><div class="flag">Could not load <b>${esc(id)}</b>.</div>`; v.querySelector('.back').onclick=()=>route('fleet'); return; } }
-  const s=d.specs||{};
-  let h=`<span class="back">← Fleet</span><h1>${esc(d.designation)}</h1>`;
-  h+=`<div class="row"><span class="badge">${esc(d.class)} · ${esc(d.classQuality)}</span><span class="badge ${d.status==='teased'?'orange':''}">${esc(d.status)}</span></div>`;
-  h+=`<p>${esc(d.description||d.summary)}</p><h2>Specifications</h2><div class="kv">`;
-  for(const k in s){ if(typeof s[k]==='object') continue; h+=`<dt>${esc(k)}</dt><dd>${esc(s[k])}</dd>`; }
-  h+=`</div>`;
-  if(s.deltaV){ h+=`<h3>Δv</h3><div class="kv">`; for(const k in s.deltaV) h+=`<dt>${esc(k)}</dt><dd>${esc(s.deltaV[k])}</dd>`; h+=`</div>`; }
-  const L=(t,a,f)=>{ if(!a||!a.length)return''; let x=`<h2>${esc(t)}</h2>`; a.forEach(o=>x+=`<div class="chg">${f(o)}</div>`); return x; };
-  h+=L('Components',d.components,c=>`<b>${esc(c.name)}</b> — ${esc(c.what)}<div class="muted">${esc(c.location||'')}${c.detail?' · '+esc(c.detail):''}</div>`);
-  h+=L('Capabilities',d.capabilities,c=>`<b>${esc(c.name)}</b><div class="muted">${esc(c.detail)}</div>`);
-  h+=L('Modules',d.modules,m=>`<b>${esc(m.name)}</b>${m.mass_t?` <span class="muted">(${esc(m.mass_t)} t)</span>`:''}<div class="muted">${esc(m.purpose)}</div>`);
-  if(d.calculations&&d.calculations.length){ h+=`<h2>Calculations</h2>`; d.calculations.forEach(c=> h+=`<h3>${esc(c.title)}</h3><div class="mono">method: ${esc(c.method)}\nresult: ${esc(c.result)}${c.note?'\nnote:   '+esc(c.note):''}</div>`); }
-  if(d.sections&&d.sections.length){ h+=`<h2>Detail</h2>`; d.sections.forEach(x=> h+= x.flag?`<div class="flag"><b>${esc(x.heading)}</b><br>${esc(x.body)}</div>`:`<h3>${esc(x.heading)}</h3><p>${esc(x.body)}</p>`); }
-  if(d.blueprint){ h+=`<h2>Blueprint</h2><div class="mono">${esc(d.blueprint.frame)}\n\n${esc(d.blueprint.stations)}${d.blueprint.notes?'\n\n'+esc(d.blueprint.notes):''}</div>`; }
-  if(d.comparisons&&d.comparisons.length){ h+=`<h2>Comparisons</h2>`; d.comparisons.forEach(c=>{ h+=`<h3>vs ${esc(c.against)} <span class="muted">(${esc(c.type)})</span></h3><table><tr><th></th><th>${esc(d.designation)}</th><th>${esc(c.against)}</th></tr>`; c.rows.forEach(r=> h+=`<tr><td class="muted">${esc(r.label)}</td><td>${esc(r.this)}</td><td>${esc(r.other)}</td></tr>`); h+=`</table>`; }); }
-  if(d.decisions&&d.decisions.length){ h+=`<h2>Decisions</h2>`; d.decisions.forEach(x=> h+=`<div class="chg"><b>${esc(x.chose)}</b> over ${esc(x.over)}<div class="muted">${esc(x.why)}</div></div>`); }
-  if(d.openItems&&d.openItems.length){ h+=`<h2>Open items</h2>`; d.openItems.forEach(o=> h+=`<div class="flag">${esc(o)}</div>`); }
-  if(d.changelog&&d.changelog.length){ h+=`<h2>Changelog</h2>`; d.changelog.forEach(c=> h+=`<div class="chg"><b>${esc(c.what)}</b> <span class="muted">${esc(c.date)}</span><div class="muted">${esc(c.why)}</div></div>`); }
-  v.innerHTML=h; v.querySelector('.back').onclick=()=>route('fleet');
-}
+  /* ---------- BOOT ---------- */
+  function boot(){
+    loadJSON(DATA_BASE+'/index.json').then(function(ix){
+      state.index = ix;
+      return loadJSON(DATA_BASE+'/reports.json').catch(function(){ return {reports:[]}; });
+    }).then(function(rep){
+      state.reports = rep;
+      document.getElementById('hspan').textContent += '  ·  '+VERSION;
+      buildNav(); route('fleet');
+    }).catch(function(e){
+      fail('Could not load '+DATA_BASE+'/index.json — '+(e&&e.message?e.message:e)+'. Check the data/ folder is in the repo.');
+    });
+  }
 
-/* ---------- IFO flat placeholder ---------- */
-function renderIFO(v){
-  const ix=state.index;
-  let h=`<h1>Interactive Fleet Overview</h1><p class="muted">Flat placeholder layout. The 2.5D exploded views, animations, and mini-missions are the next (art) pass — this shows the intended structure.</p>`;
-  h+=`<div class="ifo-stage"><div class="ifo-ship"></div><div class="ifo-ship" style="width:120px;opacity:.7"></div><div class="ifo-ship"></div>
-      <div style="position:absolute;top:8px;right:10px" class="muted">¾ view</div></div>`;
-  h+=`<div class="row" style="margin-top:10px"><button class="act ghost">◀ ¾ high-front</button><button class="act ghost">¾ low-back ▶</button><button class="act orange">▶ Play mini-mission</button></div>`;
-  h+=`<h2>Select vehicle</h2><div class="row">`;
-  ix.vehicles.forEach(x=> h+=`<span class="chip">${esc(x.designation)}</span>`);
-  h+=`</div>`;
-  h+=`<h2>Component callouts (sample)</h2>`;
-  ['Nose','Rings','LOX / CH₄ tanks','Engines','Fins / wings','Compacting mechanism'].forEach(c=> h+=`<div class="chg"><span class="ifo-dot"></span>${esc(c)} <span class="muted">— click to deploy + narrate (later pass)</span></div>`);
-  h+=`<h2>Reserved per vehicle (in JSON)</h2><div class="mono">icon: ICON drawing\nviews: { highFront, lowBack } — base image + hotspots\nmissionSequence: [ launch, separate, orbit, land … ]</div>`;
-  v.innerHTML=h;
-}
+  var TABS=[['fleet','Fleet'],['ifo','IFO'],['reports','Reports'],['timeline','Timeline'],['architect','Architect'],['photos','Photos'],['data','Backup']];
+  function buildNav(){ var nav=document.getElementById('nav'); nav.innerHTML=''; TABS.forEach(function(t){ var b=el('<button data-tab="'+t[0]+'">'+t[1]+'</button>'); b.onclick=function(){ route(t[0]); }; nav.appendChild(b); }); }
+  function setActive(tab){ Array.prototype.forEach.call(document.querySelectorAll('#nav button'),function(b){ b.classList.toggle('active', b.dataset.tab===tab); }); }
 
-/* ---------- REPORTS (read-only, repo JSON) ---------- */
-function renderReports(v){
-  const r=(state.reports.reports)||[];
-  let h=`<h1>Engineering Reports</h1><p class="muted">Session records from the repo. Read-only audit trail.</p>`;
-  if(!r.length) h+=`<div class="ph">No reports yet.</div>`;
-  r.forEach(x=> h+=`<div class="card"><h3>${esc(x.title)}</h3><div class="muted">${esc(x.date)} · ${esc(x.author||'Claude')} · ${(x.vehicles||[]).map(esc).join(', ')}</div><p>${esc(x.body)}</p></div>`);
-  v.innerHTML=h;
-}
+  function route(tab, arg){
+    try{
+      setActive(tab); window.scrollTo(0,0);
+      if(tab==='fleet') return arg?renderVehicle(arg):renderFleet();
+      if(tab==='ifo') return renderIFO();
+      if(tab==='reports') return renderReports();
+      if(tab==='timeline') return renderTimeline();
+      if(tab==='architect') return renderArchitect();
+      if(tab==='photos') return renderPhotos();
+      if(tab==='data') return renderData();
+    }catch(e){ fail('Error rendering "'+tab+'": '+(e&&e.message?e.message:e)); }
+  }
 
-/* ---------- TIMELINE (Supabase, editable, horizontal) ---------- */
-async function renderTimeline(v){
-  v.innerHTML=`<h1>Timeline</h1><p class="muted">Loading…</p>`;
-  const { data, error } = await sb.from('timeline').select('*').order('entry_date',{ascending:true});
-  let h=`<h1>Timeline</h1><div id="st" class="status"></div>`;
-  if(error){ h+=`<div class="flag">Could not load timeline: ${esc(error.message)}</div>`; }
-  h+=`<div class="tl-rail" id="rail">`;
-  (data||[]).forEach(e=>{ h+=`<div class="tl-node" data-id="${e.id}"><div class="tl-dot"></div><div class="tl-date">${esc(e.entry_date||'')}</div><div class="tl-title">${esc(e.title)}</div></div>`; });
-  h+=`</div><div id="tlcard"></div>`;
-  h+=`<h2>Add / edit entry</h2><div class="card">
-    <input id="t_title" placeholder="Title">
-    <input id="t_date" type="date">
-    <input id="t_veh" placeholder="Vehicle ids, comma-separated (e.g. lx23,tx04)">
-    <textarea id="t_body" rows="3" placeholder="Details"></textarea>
-    <input type="hidden" id="t_id">
-    <div class="row"><button class="act" id="t_save">Save</button><button class="act ghost" id="t_clear">Clear</button></div>
-  </div>`;
-  v.innerHTML=h;
-  const rows=data||[];
-  v.querySelectorAll('.tl-node').forEach(n=> n.onclick=()=>showTLCard(v, rows.find(r=>r.id===n.dataset.id)));
-  v.querySelector('#t_save').onclick=()=>saveTimeline(v);
-  v.querySelector('#t_clear').onclick=()=>{ ['t_title','t_date','t_veh','t_body','t_id'].forEach(i=>v.querySelector('#'+i).value=''); };
-}
-function showTLCard(v,e){ if(!e)return; const c=v.querySelector('#tlcard');
-  c.innerHTML=`<div class="card"><h3>${esc(e.title)}</h3><div class="muted">${esc(e.entry_date||'')}${(e.vehicles&&e.vehicles.length)?' · '+e.vehicles.map(esc).join(', '):''}</div><p>${esc(e.body)}</p>
-    <div class="row"><button class="act ghost" id="tl_edit">Edit</button><button class="act danger" id="tl_del">Delete</button></div></div>`;
-  c.querySelector('#tl_edit').onclick=()=>{ v.querySelector('#t_title').value=e.title||''; v.querySelector('#t_date').value=e.entry_date||''; v.querySelector('#t_veh').value=(e.vehicles||[]).join(','); v.querySelector('#t_body').value=e.body||''; v.querySelector('#t_id').value=e.id; window.scrollTo(0,document.body.scrollHeight); };
-  c.querySelector('#tl_del').onclick=async()=>{ if(!confirm('Delete this entry?'))return; const {error}=await sb.from('timeline').delete().eq('id',e.id); if(error)return status(v,'err',error.message); route('timeline'); };
-}
-async function saveTimeline(v){
-  const id=v.querySelector('#t_id').value;
-  const veh=v.querySelector('#t_veh').value.split(',').map(s=>s.trim()).filter(Boolean);
-  const rec={ title:v.querySelector('#t_title').value, entry_date:v.querySelector('#t_date').value||null, vehicles:veh, body:v.querySelector('#t_body').value, updated_at:new Date().toISOString() };
-  if(!rec.title){ return status(v,'err','Title required.'); }
-  const q = id ? sb.from('timeline').update(rec).eq('id',id) : sb.from('timeline').insert(rec);
-  const {error}=await q; if(error) return status(v,'err',error.message);
-  route('timeline');
-}
+  /* ---------- FLEET ---------- */
+  function renderFleet(){
+    var ix=state.index, byClass={};
+    ix.vehicles.forEach(function(x){ (byClass[x.class]=byClass[x.class]||[]).push(x); });
+    var h='<h1>'+esc(ix.castle.company)+'</h1><p class="muted">'+esc(ix.castle.motto)+'</p><h2>Fleet</h2>';
+    Object.keys(byClass).sort().forEach(function(cls){
+      var q=(ix.taxonomy.classes.filter(function(c){return c.code===cls[0];})[0]||{}).name||'';
+      h+='<h3>'+esc(cls)+' — '+esc(q)+'</h3>';
+      byClass[cls].forEach(function(x){ h+='<div class="card click" data-id="'+esc(x.id)+'"><h3>'+esc(x.designation)+'</h3><div><span class="badge">'+esc(x.class)+'</span><span class="badge '+(x.status==='teased'?'orange':'')+'">'+esc(x.status)+'</span> <span class="muted">'+esc(x.role)+'</span></div></div>'; });
+    });
+    h+='<h2>Class taxonomy</h2><div class="kv">';
+    ix.taxonomy.classes.forEach(function(c){ h+='<dt>'+esc(c.code)+'X — '+esc(c.name)+'</dt><dd class="muted">'+esc(c.desc)+'</dd>'; });
+    h+='</div><p class="muted" style="margin-top:8px">'+esc(ix.taxonomy.note)+'</p>';
+    view().innerHTML=h;
+    Array.prototype.forEach.call(view().querySelectorAll('.card'),function(c){ c.onclick=function(){ route('fleet', c.dataset.id); }; });
+  }
 
-/* ---------- ARCHITECT (Supabase, editable) ---------- */
-async function renderArchitect(v){
-  v.innerHTML=`<h1>Chief Architect Log</h1><p class="muted">Loading…</p>`;
-  const { data, error } = await sb.from('architect_log').select('*').order('entry_date',{ascending:false});
-  let h=`<h1>Chief Architect Log</h1><p class="muted">Franco's own record. Editable, saved to CASTLE's database.</p><div id="st" class="status"></div>`;
-  h+=`<h2>New voice note (local)</h2><div class="row"><button class="act" id="recBtn">● Record</button><span id="recStatus" class="muted"></span></div><div id="recOut"></div>`;
-  h+=`<h2>Add / edit entry</h2><div class="card">
-    <input id="a_title" placeholder="Title">
-    <input id="a_date" type="date">
-    <textarea id="a_body" rows="4" placeholder="Write your entry"></textarea>
-    <input type="hidden" id="a_id">
-    <div class="row"><button class="act" id="a_save">Save</button><button class="act ghost" id="a_clear">Clear</button></div>
-  </div><h2>Entries</h2><div id="alist"></div>`;
-  if(error) h+=`<div class="flag">Could not load: ${esc(error.message)}</div>`;
-  v.innerHTML=h;
-  const list=v.querySelector('#alist');
-  (data||[]).forEach(e=>{ const card=$(`<div class="card"><h3>${esc(e.title)}</h3><div class="muted">${esc(e.entry_date||'')} · ${esc(e.entry_type||'text')}</div><p>${esc(e.body)}</p><div class="row"><button class="act ghost">Edit</button><button class="act danger">Delete</button></div></div>`);
-    const [ed,del]=card.querySelectorAll('button');
-    ed.onclick=()=>{ v.querySelector('#a_title').value=e.title||''; v.querySelector('#a_date').value=e.entry_date||''; v.querySelector('#a_body').value=e.body||''; v.querySelector('#a_id').value=e.id; window.scrollTo(0,0); };
-    del.onclick=async()=>{ if(!confirm('Delete this entry?'))return; const {error}=await sb.from('architect_log').delete().eq('id',e.id); if(error)return status(v,'err',error.message); route('architect'); };
-    list.appendChild(card);
-  });
-  v.querySelector('#a_save').onclick=async()=>{
-    const id=v.querySelector('#a_id').value;
-    const rec={ title:v.querySelector('#a_titl
-  h+=L('Capabilities',d.capabilities,c=>`<b>${esc(c.name)}</b><div class="muted">${esc(c.detail)}</div>`);
-  h+=L('Modules',d.modules,m=>`<b>${esc(m.name)}</b>${m.mass_t?` <span class="muted">(${esc(m.mass_t)} t)</span>`:''}<div class="muted">${esc(m.purpose)}</div>`);
-  if(d.calculations&&d.calculations.length){ h+=`<h2>Calculations</h2>`; d.calculations.forEach(c=> h+=`<h3>${esc(c.title)}</h3><div class="mono">method: ${esc(c.method)}\nresult: ${esc(c.result)}${c.note?'\nnote:   '+esc(c.note):''}</div>`); }
-  if(d.sections&&d.sections.length){ h+=`<h2>Detail</h2>`; d.sections.forEach(x=> h+= x.flag?`<div class="flag"><b>${esc(x.heading)}</b><br>${esc(x.body)}</div>`:`<h3>${esc(x.heading)}</h3><p>${esc(x.body)}</p>`); }
-  if(d.blueprint){ h+=`<h2>Blueprint</h2><div class="mono">${esc(d.blueprint.frame)}\n\n${esc(d.blueprint.stations)}${d.blueprint.notes?'\n\n'+esc(d.blueprint.notes):''}</div>`; }
-  if(d.comparisons&&d.comparisons.length){ h+=`<h2>Comparisons</h2>`; d.comparisons.forEach(c=>{ h+=`<h3>vs ${esc(c.against)} <span class="muted">(${esc(c.type)})</span></h3><table><tr><th></th><th>${esc(d.designation)}</th><th>${esc(c.against)}</th></tr>`; c.rows.forEach(r=> h+=`<tr><td class="muted">${esc(r.label)}</td><td>${esc(r.this)}</td><td>${esc(r.other)}</td></tr>`); h+=`</table>`; }); }
-  if(d.decisions&&d.decisions.length){ h+=`<h2>Decisions</h2>`; d.decisions.forEach(x=> h+=`<div class="chg"><b>${esc(x.chose)}</b> over ${esc(x.over)}<div class="muted">${esc(x.why)}</div></div>`); }
-  if(d.openItems&&d.openItems.length){ h+=`<h2>Open items</h2>`; d.openItems.forEach(o=> h+=`<div class="flag">${esc(o)}</div>`); }
-  if(d.changelog&&d.changelog.length){ h+=`<h2>Changelog</h2>`; d.changelog.forEach(c=> h+=`<div class="chg"><b>${esc(c.what)}</b> <span class="muted">${esc(c.date)}</span><div class="muted">${esc(c.why)}</div></div>`); }
-  v.innerHTML=h; v.querySelector('.back').onclick=()=>route('fleet');
-}
+  function renderVehicle(id){
+    view().innerHTML='<div id="boot">Loading '+esc(id)+'…</div>';
+    var render=function(d){
+      state.vehicles[id]=d; var s=d.specs||{};
+      var h='<span class="back">← Fleet</span><h1>'+esc(d.designation)+'</h1>';
+      h+='<div class="row"><span class="badge">'+esc(d.class)+' · '+esc(d.classQuality)+'</span><span class="badge '+(d.status==='teased'?'orange':'')+'">'+esc(d.status)+'</span></div>';
+      h+='<p>'+esc(d.description||d.summary)+'</p><h2>Specifications</h2><div class="kv">';
+      for(var k in s){ if(s.hasOwnProperty(k) && typeof s[k]!=='object'){ h+='<dt>'+esc(k)+'</dt><dd>'+esc(s[k])+'</dd>'; } }
+      h+='</div>';
+      if(s.deltaV){ h+='<h3>Δv</h3><div class="kv">'; for(var kk in s.deltaV){ if(s.deltaV.hasOwnProperty(kk)) h+='<dt>'+esc(kk)+'</dt><dd>'+esc(s.deltaV[kk])+'</dd>'; } h+='</div>'; }
+      function L(t,a,f){ if(!a||!a.length)return''; var x='<h2>'+esc(t)+'</h2>'; a.forEach(function(o){ x+='<div class="chg">'+f(o)+'</div>'; }); return x; }
+      h+=L('Components',d.components,function(c){ return '<b>'+esc(c.name)+'</b> — '+esc(c.what)+'<div class="muted">'+esc(c.location||'')+(c.detail?' · '+esc(c.detail):'')+'</div>'; });
+      h+=L('Capabilities',d.capabilities,function(c){ return '<b>'+esc(c.name)+'</b><div class="muted">'+esc(c.detail)+'</div>'; });
+      h+=L('Modules',d.modules,function(m){ return '<b>'+esc(m.name)+'</b>'+(m.mass_t?' <span class="muted">('+esc(m.mass_t)+' t)</span>':'')+'<div class="muted">'+esc(m.purpose)+'</div>'; });
+      if(d.calculations&&d.calculations.length){ h+='<h2>Calculations</h2>'; d.calculations.forEach(function(c){ h+='<h3>'+esc(c.title)+'</h3><div class="mono">method: '+esc(c.method)+'\nresult: '+esc(c.result)+(c.note?'\nnote:   '+esc(c.note):'')+'</div>'; }); }
+      if(d.sections&&d.sections.length){ h+='<h2>Detail</h2>'; d.sections.forEach(function(x){ h+= x.flag?'<div class="flag"><b>'+esc(x.heading)+'</b><br>'+esc(x.body)+'</div>':'<h3>'+esc(x.heading)+'</h3><p>'+esc(x.body)+'</p>'; }); }
+      if(d.blueprint){ h+='<h2>Blueprint</h2><div class="mono">'+esc(d.blueprint.frame)+'\n\n'+esc(d.blueprint.stations)+(d.blueprint.notes?'\n\n'+esc(d.blueprint.notes):'')+'</div>'; }
+      if(d.comparisons&&d.comparisons.length){ h+='<h2>Comparisons</h2>'; d.comparisons.forEach(function(c){ h+='<h3>vs '+esc(c.against)+' <span class="muted">('+esc(c.type)+')</span></h3><table><tr><th></th><th>'+esc(d.designation)+'</th><th>'+esc(c.against)+'</th></tr>'; c.rows.forEach(function(r){ h+='<tr><td class="muted">'+esc(r.label)+'</td><td>'+esc(r.this)+'</td><td>'+esc(r.other)+'</td></tr>'; }); h+='</table>'; }); }
+      if(d.decisions&&d.decisions.length){ h+='<h2>Decisions</h2>'; d.decisions.forEach(function(x){ h+='<div class="chg"><b>'+esc(x.chose)+'</b> over '+esc(x.over)+'<div class="muted">'+esc(x.why)+'</div></div>'; }); }
+      if(d.openItems&&d.openItems.length){ h+='<h2>Open items</h2>'; d.openItems.forEach(function(o){ h+='<div class="flag">'+esc(o)+'</div>'; }); }
+      if(d.changelog&&d.changelog.length){ h+='<h2>Changelog</h2>'; d.changelog.forEach(function(c){ h+='<div class="chg"><b>'+esc(c.what)+'</b> <span class="muted">'+esc(c.date)+'</span><div class="muted">'+esc(c.why)+'</div></div>'; }); }
+      view().innerHTML=h; view().querySelector('.back').onclick=function(){ route('fleet'); };
+    };
+    if(state.vehicles[id]) return render(state.vehicles[id]);
+    loadJSON(DATA_BASE+'/vehicles/'+id+'.json').then(render).catch(function(e){
+      view().innerHTML='<span class="back">← Fleet</span><div class="flag">Could not load '+esc(id)+' — '+esc(e.message)+'</div>';
+      view().querySelector('.back').onclick=function(){ route('fleet'); };
+    });
+  }
 
-/* ---------- IFO flat placeholder ---------- */
-function renderIFO(v){
-  const ix=state.index;
-  let h=`<h1>Interactive Fleet Overview</h1><p class="muted">Flat placeholder layout. The 2.5D exploded views, animations, and mini-missions are the next (art) pass — this shows the intended structure.</p>`;
-  h+=`<div class="ifo-stage"><div class="ifo-ship"></div><div class="ifo-ship" style="width:120px;opacity:.7"></div><div class="ifo-ship"></div>
-      <div style="position:absolute;top:8px;right:10px" class="muted">¾ view</div></div>`;
-  h+=`<div class="row" style="margin-top:10px"><button class="act ghost">◀ ¾ high-front</button><button class="act ghost">¾ low-back ▶</button><button class="act orange">▶ Play mini-mission</button></div>`;
-  h+=`<h2>Select vehicle</h2><div class="row">`;
-  ix.vehicles.forEach(x=> h+=`<span class="chip">${esc(x.designation)}</span>`);
-  h+=`</div>`;
-  h+=`<h2>Component callouts (sample)</h2>`;
-  ['Nose','Rings','LOX / CH₄ tanks','Engines','Fins / wings','Compacting mechanism'].forEach(c=> h+=`<div class="chg"><span class="ifo-dot"></span>${esc(c)} <span class="muted">— click to deploy + narrate (later pass)</span></div>`);
-  h+=`<h2>Reserved per vehicle (in JSON)</h2><div class="mono">icon: ICON drawing\nviews: { highFront, lowBack } — base image + hotspots\nmissionSequence: [ launch, separate, orbit, land … ]</div>`;
-  v.innerHTML=h;
-}
+  /* ---------- IFO ---------- */
+  function renderIFO(){
+    var ix=state.index;
+    var h='<h1>Interactive Fleet Overview</h1><p class="muted">Flat placeholder layout. The 2.5D exploded views, animations, and mini-missions are the next (art) pass — this shows the intended structure.</p>';
+    h+='<div class="ifo-stage"><div class="ifo-ship"></div><div class="ifo-ship" style="width:120px;opacity:.7"></div><div class="ifo-ship"></div><div style="position:absolute;top:8px;right:10px" class="muted">¾ view</div></div>';
+    h+='<div class="row" style="margin-top:10px"><button class="act ghost">◀ ¾ high-front</button><button class="act ghost">¾ low-back ▶</button><button class="act orange">▶ Play mini-mission</button></div>';
+    h+='<h2>Select vehicle</h2><div class="row">';
+    ix.vehicles.forEach(function(x){ h+='<span class="chip">'+esc(x.designation)+'</span>'; });
+    h+='</div><h2>Component callouts (sample)</h2>';
+    ['Nose','Rings','LOX / CH₄ tanks','Engines','Fins / wings','Compacting mechanism'].forEach(function(c){ h+='<div class="chg"><span class="ifo-dot"></span>'+esc(c)+' <span class="muted">— click to deploy + narrate (later pass)</span></div>'; });
+    h+='<h2>Reserved per vehicle (in JSON)</h2><div class="mono">icon: ICON drawing\nviews: { highFront, lowBack } — base image + hotspots\nmissionSequence: [ launch, separate, orbit, land … ]</div>';
+    view().innerHTML=h;
+  }
 
-/* ---------- REPORTS (read-only, repo JSON) ---------- */
-function renderReports(v){
-  const r=(state.reports.reports)||[];
-  let h=`<h1>Engineering Reports</h1><p class="muted">Session records from the repo. Read-only audit trail.</p>`;
-  if(!r.length) h+=`<div class="ph">No reports yet.</div>`;
-  r.forEach(x=> h+=`<div class="card"><h3>${esc(x.title)}</h3><div class="muted">${esc(x.date)} · ${esc(x.author||'Claude')} · ${(x.vehicles||[]).map(esc).join(', ')}</div><p>${esc(x.body)}</p></div>`);
-  v.innerHTML=h;
-}
+  /* ---------- REPORTS ---------- */
+  function renderReports(){
+    var r=(state.reports&&state.reports.reports)||[];
+    var h='<h1>Engineering Reports</h1><p class="muted">Session records from the repo. Read-only audit trail.</p>';
+    if(!r.length) h+='<div class="ph">No reports yet.</div>';
+    r.forEach(function(x){ h+='<div class="card"><h3>'+esc(x.title)+'</h3><div class="muted">'+esc(x.date)+' · '+esc(x.author||'Claude')+' · '+((x.vehicles||[]).map(esc).join(', '))+'</div><p>'+esc(x.body)+'</p></div>'; });
+    view().innerHTML=h;
+  }
 
-/* ---------- TIMELINE (Supabase, editable, horizontal) ---------- */
-async function renderTimeline(v){
-  v.innerHTML=`<h1>Timeline</h1><p class="muted">Loading…</p>`;
-  const { data, error } = await sb.from('timeline').select('*').order('entry_date',{ascending:true});
-  let h=`<h1>Timeline</h1><div id="st" class="status"></div>`;
-  if(error){ h+=`<div class="flag">Could not load timeline: ${esc(error.message)}</div>`; }
-  h+=`<div class="tl-rail" id="rail">`;
-  (data||[]).forEach(e=>{ h+=`<div class="tl-node" data-id="${e.id}"><div class="tl-dot"></div><div class="tl-date">${esc(e.entry_date||'')}</div><div class="tl-title">${esc(e.title)}</div></div>`; });
-  h+=`</div><div id="tlcard"></div>`;
-  h+=`<h2>Add / edit entry</h2><div class="card">
-    <input id="t_title" placeholder="Title">
-    <input id="t_date" type="date">
-    <input id="t_veh" placeholder="Vehicle ids, comma-separated (e.g. lx23,tx04)">
-    <textarea id="t_body" rows="3" placeholder="Details"></textarea>
-    <input type="hidden" id="t_id">
-    <div class="row"><button class="act" id="t_save">Save</button><button class="act ghost" id="t_clear">Clear</button></div>
-  </div>`;
-  v.innerHTML=h;
-  const rows=data||[];
-  v.querySelectorAll('.tl-node').forEach(n=> n.onclick=()=>showTLCard(v, rows.find(r=>r.id===n.dataset.id)));
-  v.querySelector('#t_save').onclick=()=>saveTimeline(v);
-  v.querySelector('#t_clear').onclick=()=>{ ['t_title','t_date','t_veh','t_body','t_id'].forEach(i=>v.querySelector('#'+i).value=''); };
-}
-function showTLCard(v,e){ if(!e)return; const c=v.querySelector('#tlcard');
-  c.innerHTML=`<div class="card"><h3>${esc(e.title)}</h3><div class="muted">${esc(e.entry_date||'')}${(e.vehicles&&e.vehicles.length)?' · '+e.vehicles.map(esc).join(', '):''}</div><p>${esc(e.body)}</p>
-    <div class="row"><button class="act ghost" id="tl_edit">Edit</button><button class="act danger" id="tl_del">Delete</button></div></div>`;
-  c.querySelector('#tl_edit').onclick=()=>{ v.querySelector('#t_title').value=e.title||''; v.querySelector('#t_date').value=e.entry_date||''; v.querySelector('#t_veh').value=(e.vehicles||[]).join(','); v.querySelector('#t_body').value=e.body||''; v.querySelector('#t_id').value=e.id; window.scrollTo(0,document.body.scrollHeight); };
-  c.querySelector('#tl_del').onclick=async()=>{ if(!confirm('Delete this entry?'))return; const {error}=await sb.from('timeline').delete().eq('id',e.id); if(error)return status(v,'err',error.message); route('timeline'); };
-}
-async function saveTimeline(v){
-  const id=v.querySelector('#t_id').value;
-  const veh=v.querySelector('#t_veh').value.split(',').map(s=>s.trim()).filter(Boolean);
-  const rec={ title:v.querySelector('#t_title').value, entry_date:v.querySelector('#t_date').value||null, vehicles:veh, body:v.querySelector('#t_body').value, updated_at:new Date().toISOString() };
-  if(!rec.title){ return status(v,'err','Title required.'); }
-  const q = id ? sb.from('timeline').update(rec).eq('id',id) : sb.from('timeline').insert(rec);
-  const {error}=await q; if(error) return status(v,'err',error.message);
-  route('timeline');
-}
+  /* ---------- SUPABASE GUARD ---------- */
+  function needSB(){ if(sb) return true; view().innerHTML='<div class="flag">Supabase is not available: '+esc(sbError||'unknown')+'<br><br>Fleet, vehicles, and reports still work (they load from the repo). This tab needs the database connection.</div>'; return false; }
+  function status(kind,msg){ var s=document.getElementById('st'); if(!s)return; s.className='status show '+kind; s.textContent=msg; setTimeout(function(){ s.className='status'; },3500); }
 
-/* ---------- ARCHITECT (Supabase, editable) ---------- */
-async function renderArchitect(v){
-  v.innerHTML=`<h1>Chief Architect Log</h1><p class="muted">Loading…</p>`;
-  const { data, error } = await sb.from('architect_log').select('*').order('entry_date',{ascending:false});
-  let h=`<h1>Chief Architect Log</h1><p class="muted">Franco's own record. Editable, saved to CASTLE's database.</p><div id="st" class="status"></div>`;
-  h+=`<h2>New voice note (local)</h2><div class="row"><button class="act" id="recBtn">● Record</button><span id="recStatus" class="muted"></span></div><div id="recOut"></div>`;
-  h+=`<h2>Add / edit entry</h2><div class="card">
-    <input id="a_title" placeholder="Title">
-    <input id="a_date" type="date">
-    <textarea id="a_body" rows="4" placeholder="Write your entry"></textarea>
-    <input type="hidden" id="a_id">
-    <div class="row"><button class="act" id="a_save">Save</button><button class="act ghost" id="a_clear">Clear</button></div>
-  </div><h2>Entries</h2><div id="alist"></div>`;
-  if(error) h+=`<div class="flag">Could not load: ${esc(error.message)}</div>`;
-  v.innerHTML=h;
-  const list=v.querySelector('#alist');
-  (data||[]).forEach(e=>{ const card=$(`<div class="card"><h3>${esc(e.title)}</h3><div class="muted">${esc(e.entry_date||'')} · ${esc(e.entry_type||'text')}</div><p>${esc(e.body)}</p><div class="row"><button class="act ghost">Edit</button><button class="act danger">Delete</button></div></div>`);
-    const [ed,del]=card.querySelectorAll('button');
-    ed.onclick=()=>{ v.querySelector('#a_title').value=e.title||''; v.querySelector('#a_date').value=e.entry_date||''; v.querySelector('#a_body').value=e.body||''; v.querySelector('#a_id').value=e.id; window.scrollTo(0,0); };
-    del.onclick=async()=>{ if(!confirm('Delete this entry?'))return; const {error}=await sb.from('architect_log').delete().eq('id',e.id); if(error)return status(v,'err',error.message); route('architect'); };
-    list.appendChild(card);
-  });
-  v.querySelector('#a_save').onclick=async()=>{
-    const id=v.querySelector('#a_id').value;
-    const rec={ title:v.querySelector('#a_title').value, entry_date:v.querySelector('#a_date').value||null, body:v.querySelector('#a_body').value, entry_type:'text', updated_at:new Date().toISOString() };
-    if(!rec.title) return status(v,'err','Title required.');
-    const q=id? sb.from('architect_log').update(rec).eq('id',id) : sb.from('architect_log').insert(rec);
-    const {error}=await q; if(error) return status(v,'err',error.message); route('architect');
-  };
-  v.querySelector('#a_clear').onclick=()=>['a_title','a_date','a_body','a_id'].forEach(i=>v.querySelector('#'+i).value='');
-  wireRecorder(v);
-}
-function wireRecorder(v){
-  const btn=v.querySelector('#recBtn'), st=v.querySelector('#recStatus'), out=v.querySelector('#recOut'); let mr,chunks=[],rec=false;
-  btn.onclick=async()=>{ if(!rec){ try{ const stream=await navigator.mediaDevices.getUserMedia({audio:true}); mr=new MediaRecorder(stream); chunks=[]; mr.ondataavailable=e=>chunks.push(e.data); mr.onstop=()=>{ const url=URL.createObjectURL(new Blob(chunks,{type:'audio/webm'})); out.innerHTML=`<audio controls src="${url}" style="width:100%;margin-top:8px"></audio><p class="muted">Recorded locally. Uploading voice to storage is a later pass.</p>`; }; mr.start(); rec=true; btn.textContent='■ Stop'; st.textContent='recording…'; }catch(e){ st.textContent='mic unavailable: '+e.message; } } else { mr.stop(); rec=false; btn.textContent='● Record'; st.textContent='saved below'; } };
-}
+  /* ---------- TIMELINE ---------- */
+  function renderTimeline(){
+    if(!needSB()) return;
+    view().innerHTML='<h1>Timeline</h1><div id="boot">Loading…</div>';
+    sb.from('timeline').select('*').order('entry_date',{ascending:true}).then(function(res){
+      var data=res.data||[], error=res.error;
+      var h='<h1>Timeline</h1><div id="st" class="status"></div>';
+      if(error) h+='<div class="flag">Load error: '+esc(error.message)+'</div>';
+      h+='<div class="tl-rail">';
+      data.forEach(function(e){ h+='<div class="tl-node" data-id="'+e.id+'"><div class="tl-dot"></div><div class="tl-date">'+esc(e.entry_date||'')+'</div><div class="tl-title">'+esc(e.title)+'</div></div>'; });
+      h+='</div><div id="tlcard"></div>';
+      h+='<h2>Add / edit entry</h2><div class="card"><input id="t_title" placeholder="Title"><input id="t_date" type="date"><input id="t_veh" placeholder="Vehicle ids, comma-separated (e.g. lx23,tx04)"><textarea id="t_body" rows="3" placeholder="Details"></textarea><input type="hidden" id="t_id"><div class="row"><button class="act" id="t_save">Save</button><button class="act ghost" id="t_clear">Clear</button></div></div>';
+      view().innerHTML=h;
+      Array.prototype.forEach.call(view().querySelectorAll('.tl-node'),function(n){ n.onclick=function(){ showTLCard(data.filter(function(r){return r.id===n.dataset.id;})[0]); }; });
+      document.getElementById('t_save').onclick=saveTimeline;
+      document.getElementById('t_clear').onclick=function(){ ['t_title','t_date','t_veh','t_body','t_id'].forEach(function(i){ document.getElementById(i).value=''; }); };
+    });
+  }
+  function showTLCard(e){ if(!e)return; var c=document.getElementById('tlcard');
+    c.innerHTML='<div class="card"><h3>'+esc(e.title)+'</h3><div class="muted">'+esc(e.entry_date||'')+((e.vehicles&&e.vehicles.length)?' · '+e.vehicles.map(esc).join(', '):'')+'</div><p>'+esc(e.body)+'</p><div class="row"><button class="act ghost" id="tl_edit">Edit</button><button class="act danger" id="tl_del">Delete</button></div></div>';
+    document.getElementById('tl_edit').onclick=function(){ document.getElementById('t_title').value=e.title||''; document.getElementById('t_date').value=e.entry_date||''; document.getElementById('t_veh').value=(e.vehicles||[]).join(','); document.getElementById('t_body').value=e.body||''; document.getElementById('t_id').value=e.id; window.scrollTo(0,document.body.scrollHeight); };
+    document.getElementById('tl_del').onclick=function(){ if(!confirm('Delete this entry?'))return; sb.from('timeline').delete().eq('id',e.id).then(function(res){ if(res.error) return status('err',res.error.message); route('timeline'); }); };
+  }
+  function saveTimeline(){
+    var id=document.getElementById('t_id').value;
+    var veh=document.getElementById('t_veh').value.split(',').map(function(s){return s.trim();}).filter(Boolean);
+    var rec={ title:document.getElementById('t_title').value, entry_date:document.getElementById('t_date').value||null, vehicles:veh, body:document.getElementById('t_body').value, updated_at:new Date().toISOString() };
+    if(!rec.title) return status('err','Title required.');
+    var q = id ? sb.from('timeline').update(rec).eq('id',id) : sb.from('timeline').insert(rec);
+    q.then(function(res){ if(res.error) return status('err',res.error.message); route('timeline'); });
+  }
 
-/* ---------- PHOTOS (Supabase metadata; image upload later) ---------- */
-async function renderPhotos(v){
-  v.innerHTML=`<h1>Photos</h1><p class="muted">Loading…</p>`;
-  const { data, error } = await sb.from('photos').select('*').order('created_at',{ascending:false});
-  let h=`<h1>Photos</h1><p class="muted">Photo metadata saved to CASTLE's database. Image file upload to storage is a later pass; preview is local for now.</p><div id="st" class="status"></div>`;
-  h+=`<div class="card">
-    <input type="file" id="pf" accept="image/*">
-    <input id="pt" placeholder="Title">
-    <input id="pd" type="date">
-    <input id="pvid" placeholder="Vehicle id (optional, e.g. tx04)">
-    <textarea id="pdesc" rows="2" placeholder="Description"></textarea>
-    <button class="act" id="padd">Save entry</button>
-  </div><div id="plist"></div>`;
-  if(error) h+=`<div class="flag">${esc(error.message)}</div>`;
-  v.innerHTML=h;
-  const list=v.querySelector('#plist');
-  (data||[]).forEach(e=>{ list.appendChild($(`<div class="card"><h3>${esc(e.title)}</h3><div class="muted">${esc(e.entry_date||'')}${e.vehicle_id?' · '+esc(e.vehicle_id):''}</div><p>${esc(e.description)}</p></div>`)); });
-  v.querySelector('#padd').onclick=async()=>{
-    const f=v.querySelector('#pf').files[0]; let preview='';
-    if(f){ preview=`<img src="${URL.createObjectURL(f)}" style="max-width:100%;border-radius:6px">`; }
-    const rec={ title:v.querySelector('#pt').value||'(untitled)', entry_date:v.querySelector('#pd').value||null, vehicle_id:v.querySelector('#pvid').value||null, description:v.querySelector('#pdesc').value||'' };
-    const {error}=await sb.from('photos').insert(rec); if(error) return status(v,'err',error.message);
-    list.insertBefore($(`<div class="card">${preview}<h3>${esc(rec.title)}</h3><div class="muted">${esc(rec.entry_date||'')}</div><p>${esc(rec.description)}</p></div>`), list.firstChild);
-    status(v,'ok','Saved.');
-  };
-}
+  /* ---------- ARCHITECT ---------- */
+  function renderArchitect(){
+    if(!needSB()) return;
+    view().innerHTML='<h1>Chief Architect Log</h1><div id="boot">Loading…</div>';
+    sb.from('architect_log').select('*').order('entry_date',{ascending:false}).then(function(res){
+      var data=res.data||[], error=res.error;
+      var h='<h1>Chief Architect Log</h1><p class="muted">Franco\'s own record. Editable, saved to CASTLE\'s database.</p><div id="st" class="status"></div>';
+      h+='<h2>New voice note (local)</h2><div class="row"><button class="act" id="recBtn">● Record</button><span id="recStatus" class="muted"></span></div><div id="recOut"></div>';
+      h+='<h2>Add / edit entry</h2><div class="card"><input id="a_title" placeholder="Title"><input id="a_date" type="date"><textarea id="a_body" rows="4" placeholder="Write your entry"></textarea><input type="hidden" id="a_id"><div class="row"><button class="act" id="a_save">Save</button><button class="act ghost" id="a_clear">Clear</button></div></div>';
+      if(error) h+='<div class="flag">Load error: '+esc(error.message)+'</div>';
+      h+='<h2>Entries</h2><div id="alist"></div>';
+      view().innerHTML=h;
+      var list=document.getElementById('alist');
+      data.forEach(function(e){
+        var card=el('<div class="card"><h3>'+esc(e.title)+'</h3><div class="muted">'+esc(e.entry_date||'')+' · '+esc(e.entry_type||'text')+'</div><p>'+esc(e.body)+'</p><div class="row"><button class="act ghost">Edit</button><button class="act danger">Delete</button></div></div>');
+        var btns=card.querySelectorAll('button');
+        btns[0].onclick=function(){ document.getElementById('a_title').value=e.title||''; document.getElementById('a_date').value=e.entry_date||''; document.getElementById('a_body').value=e.body||''; document.getElementById('a_id').value=e.id; window.scrollTo(0,0); };
+        btns[1].onclick=function(){ if(!confirm('Delete this entry?'))return; sb.from('architect_log').delete().eq('id',e.id).then(function(r){ if(r.error) return status('err',r.error.message); route('architect'); }); };
+        list.appendChild(card);
+      });
+      document.getElementById('a_save').onclick=function(){
+        var id=document.getElementById('a_id').value;
+        var rec={ title:document.getElementById('a_title').value, entry_date:document.getElementById('a_date').value||null, body:document.getElementById('a_body').value, entry_type:'text', updated_at:new Date().toISOString() };
+        if(!rec.title) return status('err','Title required.');
+        var q=id? sb.from('architect_log').update(rec).eq('id',id) : sb.from('architect_log').insert(rec);
+        q.then(function(r){ if(r.error) return status('err',r.error.message); route('architect'); });
+      };
+      document.getElementById('a_clear').onclick=function(){ ['a_title','a_date','a_body','a_id'].forEach(function(i){ document.getElementById(i).value=''; }); };
+      wireRecorder();
+    });
+  }
+  function wireRecorder(){
+    var btn=document.getElementById('recBtn'); if(!btn)return;
+    var st=document.getElementById('recStatus'), out=document.getElementById('recOut'), mr, chunks=[], rec=false;
+    btn.onclick=function(){
+      if(!rec){ navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){ mr=new MediaRecorder(stream); chunks=[]; mr.ondataavailable=function(e){ chunks.push(e.data); }; mr.onstop=function(){ var url=URL.createObjectURL(new Blob(chunks,{type:'audio/webm'})); out.innerHTML='<audio controls src="'+url+'" style="width:100%;margin-top:8px"></audio><p class="muted">Recorded locally. Uploading audio is a later pass.</p>'; }; mr.start(); rec=true; btn.textContent='■ Stop'; st.textContent='recording…'; }).catch(function(e){ st.textContent='mic unavailable: '+e.message; });
+      } else { mr.stop(); rec=false; btn.textContent='● Record'; st.textContent='saved below'; }
+    };
+  }
 
-/* ---------- BACKUP ---------- */
-async function renderData(v){
-  let h=`<h1>Backup</h1><p class="muted">Export the Supabase-stored logs (architect, timeline, photos) to a file.</p><button class="act" id="exp">Export logs</button><div id="st" class="status"></div>`;
-  h+=`<h2>Repo data</h2><p class="muted">Vehicles and reports live in the GitHub repo as JSON (edited by committing). This backup covers only the app-editable logs.</p>`;
-  v.innerHTML=h;
-  v.querySelector('#exp').onclick=async()=>{
-    const [a,t,p]=await Promise.all([sb.from('architect_log').select('*'),sb.from('timeline').select('*'),sb.from('photos').select('*')]);
-    const dump={ architect_log:a.data||[], timeline:t.data||[], photos:p.data||[], exported:new Date().toISOString() };
-    const url=URL.createObjectURL(new Blob([JSON.stringify(dump,null,2)],{type:'application/json'}));
-    const el=document.createElement('a'); el.href=url; el.download='castle-logs-backup.json'; el.click(); status(v,'ok','Exported.');
-  };
-}
+  /* ---------- PHOTOS ---------- */
+  function renderPhotos(){
+    if(!needSB()) return;
+    view().innerHTML='<h1>Photos</h1><div id="boot">Loading…</div>';
+    sb.from('photos').select('*').order('created_at',{ascending:false}).then(function(res){
+      var data=res.data||[], error=res.error;
+      var h='<h1>Photos</h1><p class="muted">Photo metadata saved to CASTLE\'s database. Image file upload to storage is a later pass; preview is local.</p><div id="st" class="status"></div>';
+      h+='<div class="card"><input type="file" id="pf" accept="image/*"><input id="pt" placeholder="Title"><input id="pd" type="date"><input id="pvid" placeholder="Vehicle id (optional)"><textarea id="pdesc" rows="2" placeholder="Description"></textarea><button class="act" id="padd">Save entry</button></div><div id="plist"></div>';
+      if(error) h+='<div class="flag">'+esc(error.message)+'</div>';
+      view().innerHTML=h;
+      var list=document.getElementById('plist');
+      data.forEach(function(e){ list.appendChild(el('<div class="card"><h3>'+esc(e.title)+'</h3><div class="muted">'+esc(e.entry_date||'')+(e.vehicle_id?' · '+esc(e.vehicle_id):'')+'</div><p>'+esc(e.description)+'</p></div>')); });
+      document.getElementById('padd').onclick=function(){
+        var f=document.getElementById('pf').files[0], preview='';
+        if(f){ preview='<img src="'+URL.createObjectURL(f)+'" style="max-width:100%;border-radius:6px">'; }
+        var rec={ title:document.getElementById('pt').value||'(untitled)', entry_date:document.getElementById('pd').value||null, vehicle_id:document.getElementById('pvid').value||null, description:document.getElementById('pdesc').value||'' };
+        sb.from('photos').insert(rec).then(function(r){ if(r.error) return status('err',r.error.message);
+          list.insertBefore(el('<div class="card">'+preview+'<h3>'+esc(rec.title)+'</h3><div class="muted">'+esc(rec.entry_date||'')+'</div><p>'+esc(rec.description)+'</p></div>'), list.firstChild); status('ok','Saved.'); });
+      };
+    });
+  }
 
-function status(v,kind,msg){ const s=v.querySelector('#st'); if(!s)return; s.className='status show '+kind; s.textContent=msg; setTimeout(()=>s.className='status',3500); }
+  /* ---------- BACKUP ---------- */
+  function renderData(){
+    var h='<h1>Backup</h1><p class="muted">Export the database-stored logs (architect, timeline, photos) to a file.</p><button class="act" id="exp">Export logs</button><div id="st" class="status"></div><h2>Repo data</h2><p class="muted">Vehicles and reports live in the GitHub repo as JSON. This backup covers the app-editable logs.</p>';
+    view().innerHTML=h;
+    document.getElementById('exp').onclick=function(){
+      if(!sb) return status('err', sbError||'no database');
+      Promise.all([sb.from('architect_log').select('*'),sb.from('timeline').select('*'),sb.from('photos').select('*')]).then(function(rs){
+        var dump={ architect_log:rs[0].data||[], timeline:rs[1].data||[], photos:rs[2].data||[], exported:new Date().toISOString() };
+        var url=URL.createObjectURL(new Blob([JSON.stringify(dump,null,2)],{type:'application/json'}));
+        var a=document.createElement('a'); a.href=url; a.download='castle-logs-backup.json'; a.click(); status('ok','Exported.');
+      });
+    };
+  }
 
-if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
-boot();
+  if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(function(){}); }
+  boot();
+})();
 </script>
 </body>
 </html>
