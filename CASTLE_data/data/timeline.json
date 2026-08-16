@@ -1,8 +1,0 @@
-{
-  "entries": [
-    { "id": "t1", "date": "2026-01", "title": "KnightChat begins", "vehicles": [], "body": "The dream starts: jets with VTOL rotors in the wings, self-ferry, a thin-nosed spaceplane that would have melted. Franco starts knowing he knows nothing." },
-    { "id": "t2", "date": "2026", "title": "VTOL rotors and self-ferry removed", "vehicles": ["ex1","ex2"], "body": "The EX-1/2 become better, more robust tiltrotors; EX-3/4 become rocket-like glide-return orbiters and earn the X-fin configuration and 25 m length." },
-    { "id": "t3", "date": "2026-08-14", "title": "LX-23 fully reconciled", "vehicles": ["lx23","tx04"], "body": "15 m lifting body, 60 t dry, 50 t payload on three fleet-common TX-04 boosters, station-class volume that lands. Aft thrusters gain an OMS mode. Volume accounting made consistent." },
-    { "id": "t4", "date": "2026-08-14", "title": "TX-04 becomes the fleet's only booster", "vehicles": ["tx04"], "body": "EX=1, VX=2, LX=3. One booster design across the whole fleet." }
-  ]
-}
