@@ -1,0 +1,30 @@
+{
+  "castle": {
+    "name": "CASTLE",
+    "full": "Centralized Archive & Systems Tracking for Local Engineering",
+    "owner": "Franco André Torreblanca Rivero (KnightKP)",
+    "company": "KnightShip Aerospace",
+    "motto": "Adapt to any mission. Deploy without limits. Define the future."
+  },
+  "taxonomy": {
+    "note": "Prefix letter = class quality. X = expeditionary craft. The whole fleet is Expeditionary.",
+    "classes": [
+      { "code": "E", "name": "Efficient", "desc": "Small, light entry-rung craft" },
+      { "code": "V", "name": "Versatile", "desc": "Mid-class, roughly twice an EX" },
+      { "code": "L", "name": "Large-scale", "desc": "The largest vehicles" },
+      { "code": "T", "name": "Tools", "desc": "Boosters and support" },
+      { "code": "G", "name": "Ground", "desc": "Ground and surface vehicles" },
+      { "code": "R", "name": "Revolutionary", "desc": "Experimental technology" }
+    ]
+  },
+  "vehicles": [
+    { "id": "ex1", "designation": "EX-1 Lancelot", "class": "EX", "role": "Fast tiltrotor medic", "status": "concept" },
+    { "id": "ex2", "designation": "EX-2 Gawain", "class": "EX", "role": "Light tiltrotor hauler (5 t)", "status": "concept" },
+    { "id": "ex3", "designation": "EX-3 Percival", "class": "EX", "role": "Orbital glide-return workhorse", "status": "concept" },
+    { "id": "ex4", "designation": "EX-4 Galahad", "class": "EX", "role": "Crewed lunar ferry", "status": "concept" },
+    { "id": "gx04", "designation": "GX-04 Curiass", "class": "GX", "role": "Lunar descent/ascent lander", "status": "concept" },
+    { "id": "vx13", "designation": "VX-13", "class": "VX", "role": "Mid-class orbital (larger EX-3)", "status": "teased" },
+    { "id": "lx23", "designation": "LX-23 Ganelon", "class": "LX", "role": "Heavy orbital flagship", "status": "concept" },
+    { "id": "tx04", "designation": "TX-04 Pauldron", "class": "TX", "role": "Fleet-common reusable booster", "status": "concept" }
+  ]
+}

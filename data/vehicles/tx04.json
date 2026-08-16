@@ -1,0 +1,176 @@
+{
+  "id": "tx04",
+  "name": "Pauldron",
+  "designation": "TX-04 Pauldron",
+  "class": "TX",
+  "classQuality": "Tools",
+  "role": "Reusable glide-return booster (fleet-common)",
+  "status": "concept",
+  "summary": "The shared reusable booster for the whole orbital fleet: carries a glide-return orbiter off the pad, delivers the gravity-loss share of ascent, compacts in height, and glides home. EX uses 1, VX 2, LX 3.",
+  "description": "The TX-04 Pauldron is the shared reusable booster for the Knightship orbital fleet. It carries a glide-return orbiter off the pad, delivers the heavy gravity-loss share of the ascent, separates, compacts in height, and glides home to land. One booster serves the whole orbital fleet — EX uses one, VX two, LX three.",
+  "specs": {
+    "type": "Reusable telescoping glide-return booster",
+    "propellant_t": 779.4,
+    "dryMass_t": 39,
+    "dryFraction": "~4.8–5.0% of wet",
+    "wetMass_t": 818.4,
+    "liftoffThrust_kN": 13408,
+    "liftoffTWR": 1.4,
+    "boosterDeltaV_ms": 4550,
+    "diameter_m": 5,
+    "height": "~45 m uncompacted → ~28 m compacted",
+    "engines": "~6 (engine-out tolerant)",
+    "propellantType_conflict": "SEE OPEN ITEMS — Pauldron doc says storable (N2O / HTP-propane); LX-23 asparagus requires methalox for crossfeed."
+  },
+  "components": [
+    {
+      "name": "Telescoping load-bearing structure",
+      "what": "Compacts heightwise for recovery",
+      "location": "full body",
+      "detail": "Ball-screw actuators, beams, supports carry loads; pressure is only a secondary assist — never a load-bearing balloon. Stiffest when compacted (Euler ~1/L²)."
+    },
+    {
+      "name": "3 elastic sheets + 2 rings",
+      "what": "Sealed, damage-tolerant tank wall",
+      "location": "tank body",
+      "detail": "Neutral (unstressed) state is COMPACTED; filling stretches it open. The rings bound the sheets and arrest tears — no single continuous wall to unzip."
+    },
+    {
+      "name": "Fins (dual-role)",
+      "what": "Ascent stabilizers that become glide wings",
+      "location": "aft",
+      "detail": "Compaction shifts CoM aft, giving the static margin to glide — one fixed surface set, two jobs, no deploy mechanism."
+    },
+    {
+      "name": "~6 engines",
+      "what": "Liftoff thrust, engine-out tolerant",
+      "location": "base",
+      "detail": "TWR 1.5 nominal → 1.25 on losing one. Sized by engine-out, not raw thrust."
+    }
+  ],
+  "capabilities": [
+    {
+      "name": "Fleet-common boost",
+      "detail": "One booster for the whole orbital fleet: EX=1, VX=2, LX=3. One design to develop, certify, and mass-produce."
+    },
+    {
+      "name": "Glide-return recovery",
+      "detail": "Separates side-out, compacts in height, glides back to the launch/recovery site on its own fins. Stiffest during recovery/abort/handling."
+    }
+  ],
+  "modules": [],
+  "calculations": [
+    {
+      "title": "Compaction stiffness",
+      "method": "Euler critical load scales ~1/L²; compacting shortens the column.",
+      "result": "A short stubby cylinder resists buckling far better — stiffest exactly during recovery.",
+      "note": ""
+    },
+    {
+      "title": "CoM-shift re-tasking",
+      "method": "Light structure + lengthwise compaction shifts CoM aft toward the fins.",
+      "result": "Gives the static margin for gliding — ascent fins become glide wings, no deploy hardware.",
+      "note": ""
+    },
+    {
+      "title": "In-burn compaction rejected",
+      "method": "Squeezing a pressurized tank costs F = P·A.",
+      "result": "Infeasible by ~5–10×; compaction is post-burnout at vented pressure only.",
+      "note": ""
+    },
+    {
+      "title": "Dry fraction",
+      "method": "Telescoping isogrid + actuation vs bare shell vs steel monocoque.",
+      "result": "~4.8% (baseline, lean AND resilient) vs ~2.8% (fragile bare shell) vs ~7.5% (steel fallback).",
+      "note": "Actuators/beams add ~1.5–2.5% over a balloon; conservative floor near 3%."
+    }
+  ],
+  "blueprint": {
+    "frame": "Y=0 at engine plane, +Y toward orbiter end; X=0 centerline. ~45 m tall uncompacted, 5.0 m dia (R 2.5), compacting to ~28 m.",
+    "stations": "Same X-wing fin layout as the orbiters. Orbiter mounts SIDE-ON along the flank (Shuttle-style), not on the tip.",
+    "notes": "Landing gear deploys from the aft fixed section for horizontal glide-back landing."
+  },
+  "comparisons": [
+    {
+      "against": "Shuttle SRB",
+      "type": "external",
+      "rows": [
+        {
+          "label": "Recovery",
+          "this": "Winged glide-back to runway",
+          "other": "Parachute into ocean, remanufacture"
+        },
+        {
+          "label": "Reuse",
+          "this": "Casing intact, refill propellant",
+          "other": "Rebuild-from-salvage"
+        }
+      ]
+    },
+    {
+      "against": "Falcon 9 booster",
+      "type": "external",
+      "rows": [
+        {
+          "label": "Recovery",
+          "this": "Glide-return on fins",
+          "other": "Propulsive landing"
+        },
+        {
+          "label": "Dry fraction",
+          "this": "~4.8%",
+          "other": "~4–5%"
+        }
+      ]
+    }
+  ],
+  "sections": [
+    {
+      "heading": "Why storable (in the Pauldron doc)",
+      "flag": false,
+      "body": "The Pauldron doc argues storable propellant: the booster burns in minutes and flies most often, so it gains nothing from cryo and everything from fast turnaround and no cryogenic ground equipment. Cryo lives only on the orbiter, where months-long persistence needs it."
+    },
+    {
+      "heading": "Propellant conflict — storable vs methalox",
+      "flag": true,
+      "body": "UNRESOLVED CONTRADICTION: the TX-04 doc specifies STORABLE propellant (N2O or HTP/propane). But the LX-23 asparagus architecture requires the TX-04 to be METHALOX so it can crossfeed the LX-23 methane mains and the other boosters. A storable booster cannot crossfeed a methalox core. Either the LX-23 uses a methalox TX-04 variant (two variants in the fleet), or the whole orbital fleet standardises on one propellant. This needs a decision."
+    }
+  ],
+  "changelog": [
+    {
+      "date": "2026",
+      "what": "v2.0: propellant → storable; Δv split rebalanced (booster carries larger share ~4,550 m/s)",
+      "why": "Forced by the elastic tank; heavier realistic orbiter needs the booster to absorb gravity losses.",
+      "reportId": "r_tx04_v2"
+    },
+    {
+      "date": "2026-08-14",
+      "what": "LX-23 asparagus requires a METHALOX TX-04 variant",
+      "why": "Crossfeed with the LX-23 methane core is impossible with storable propellant.",
+      "reportId": "r_tx04_methalox"
+    }
+  ],
+  "decisions": [
+    {
+      "chose": "Telescoping load-bearing structure",
+      "over": "Pressure-stabilized balloon",
+      "why": "Actuators/beams carry loads; stiffest when compacted; ~85% of a bare shell’s dry-mass advantage without the fragility."
+    },
+    {
+      "chose": "Post-burnout compaction only",
+      "over": "In-burn compaction",
+      "why": "F = P·A makes in-burn compaction infeasible by ~5–10×."
+    }
+  ],
+  "openItems": [
+    "PROPELLANT: storable (Pauldron doc) vs methalox (LX-23 crossfeed) — decide whether the fleet runs one methalox booster or a storable + methalox pair.",
+    "Reverse-calc dry fraction from primary loads (floor near 3%).",
+    "Elastic-sheet + ring cryo behavior over many cycles (if methalox)."
+  ],
+  "icon": null,
+  "missionSequence": [],
+  "views": {
+    "highFront": null,
+    "lowBack": null
+  }
+}

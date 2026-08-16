@@ -1,0 +1,137 @@
+{
+  "id": "ex4",
+  "name": "Galahad",
+  "designation": "EX-4 Galahad",
+  "class": "EX",
+  "classQuality": "Efficient",
+  "role": "Reusable crewed lunar ferry",
+  "status": "concept",
+  "summary": "An EX-3 airframe re-fitted for long-duration crewed transfer between Earth orbit and lunar orbit. Ferries crew and modules; hands off to a dedicated lander at a lunar-orbit node. Not a lander.",
+  "description": "EX-4 Galahad is the fleet’s crewed lunar vehicle: an EX-3 airframe re-fitted for long-duration crewed deep-space transfer between Earth orbit and lunar orbit. It is the culmination of the fleet. Galahad is NOT a lunar lander and no longer tries to be — combining Earth-orbit launch, cislunar transfer, and lunar landing in one vehicle was a punishing Δv stack; the ferry/lander split absorbs it.",
+  "specs": {
+    "type": "Crewed lunar ferry (EX-3 frame, deep-space re-fit)",
+    "fullDryMass_t": 31.4,
+    "deepSpaceDryMass_t": 26.5,
+    "propellant": "storable",
+    "cislunarDeltaV_ms": 5050,
+    "range": "LEO ↔ lunar orbit (LLO) and back",
+    "note": "Deep-space dry drops ~4.85 t when wings are left at the node for the pure-vacuum legs."
+  },
+  "components": [
+    {
+      "name": "EX-3-derived airframe",
+      "what": "Re-fitted orbiter frame",
+      "location": "—",
+      "detail": "Full dry 31,373 kg = 26,273 (EX-3) + 5,100 (re-fit)."
+    },
+    {
+      "name": "Deep-space life support",
+      "what": "Long-duration crewed ECLSS",
+      "location": "crew section",
+      "detail": "For multi-day cislunar transit."
+    },
+    {
+      "name": "Storable propulsion",
+      "what": "Cislunar Δv on storable propellant",
+      "location": "aft",
+      "detail": "~5,050 m/s propulsive via orbital refuelling."
+    }
+  ],
+  "capabilities": [
+    {
+      "name": "Crewed lunar ferry",
+      "detail": "Ferry crew and modules LEO → lunar orbit and back, exchanging with a dedicated lander (GX-04 Curiass) at a lunar-orbit node. Refuelled in orbit; fully-fuelled return capability."
+    }
+  ],
+  "modules": [
+    {
+      "name": "Crew module",
+      "purpose": "Crewed cislunar transfer",
+      "mass_t": null
+    },
+    {
+      "name": "Cargo/propellant modules",
+      "purpose": "Delivered to the lunar node",
+      "mass_t": null
+    }
+  ],
+  "calculations": [
+    {
+      "title": "Dry mass",
+      "method": "EX-3 dry + lunar re-fit; subtract wings for pure-vacuum legs.",
+      "result": "Full dry 31,373 kg; deep-space dry 26,525 kg (−4,848 kg wings left at node).",
+      "note": ""
+    },
+    {
+      "title": "Cislunar closure",
+      "method": "Δv via orbital refuelling + ferry/lander split.",
+      "result": "~5,050 m/s propulsive cislunar.",
+      "note": "The lander (Curiass) handles the surface legs."
+    }
+  ],
+  "blueprint": {
+    "frame": "Inherits EX-3 orbiter geometry, re-fitted.",
+    "stations": "Crew + deep-space systems replace the pure orbital payload fit.",
+    "notes": ""
+  },
+  "comparisons": [
+    {
+      "against": "EX-3 Percival",
+      "type": "fleet",
+      "rows": [
+        {
+          "label": "Role",
+          "this": "Crewed lunar ferry",
+          "other": "LEO orbiter"
+        },
+        {
+          "label": "Dry mass",
+          "this": "31.4 t full",
+          "other": "26.3 t"
+        },
+        {
+          "label": "Propellant",
+          "this": "Storable",
+          "other": "Methalox"
+        }
+      ]
+    }
+  ],
+  "sections": [
+    {
+      "heading": "Not a lander",
+      "flag": false,
+      "body": "Galahad ferries crew and modules to lunar orbit and hands off to the dedicated GX-04 Curiass lander at a Luna-configuration MX-79 node. Neither vehicle does the other’s job — the punishing combined Δv of an all-in-one lunar vehicle is split across two purpose-built craft."
+    },
+    {
+      "heading": "Culmination of the fleet",
+      "flag": false,
+      "body": "EX-4 is where the architecture pays off: EX-3 feeds the depot, the depot fuels EX-4, EX-4 ferries to the lunar node, and the Curiass reaches the surface."
+    }
+  ],
+  "changelog": [
+    {
+      "date": "2026",
+      "what": "Lander role removed; became pure ferry",
+      "why": "Earlier all-in-one (launch + transfer + landing) was a punishing Δv stack. Ferry/lander split closes it.",
+      "reportId": "r_ex4_split"
+    }
+  ],
+  "decisions": [
+    {
+      "chose": "Ferry + separate lander",
+      "over": "All-in-one lunar vehicle",
+      "why": "Splitting the Δv across two vehicles closes the budget and adds architectural redundancy."
+    }
+  ],
+  "openItems": [
+    "Long-duration ECLSS + radiation shielding mass for multi-day transit.",
+    "Node refuelling logistics."
+  ],
+  "icon": null,
+  "missionSequence": [],
+  "views": {
+    "highFront": null,
+    "lowBack": null
+  }
+}

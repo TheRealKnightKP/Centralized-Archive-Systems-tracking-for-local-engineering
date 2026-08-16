@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1A3A5C">
+<title>CASTLE — KnightShip Archive</title>
+<link rel="manifest" href="manifest.json">
+<style>
+  /* --- BASIC GUI ONLY. The good UI comes in a later pass. --- */
+  :root{ --navy:#1A3A5C; --orange:#C2820A; --grey:#55606E; --bg:#10161d; --panel:#18222d; --panel2:#1f2b38; --line:#2b3947; --text:#e7edf3; --dim:#9fb0c0; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); -webkit-text-size-adjust:100%; }
+  header{ background:var(--navy); padding:14px 16px; display:flex; align-items:center; gap:10px; position:sticky; top:0; z-index:10; }
+  header b{ font-size:20px; letter-spacing:1px; }
+  header span{ color:#a9c4dd; font-size:11px; }
+  nav{ display:flex; gap:4px; overflow-x:auto; background:var(--panel); padding:8px; border-bottom:1px solid var(--line); position:sticky; top:52px; z-index:9; }
+  nav button{ background:var(--panel2); color:var(--dim); border:1px solid var(--line); border-radius:6px; padding:8px 12px; font-size:13px; white-space:nowrap; cursor:pointer; }
+  nav button.active{ background:var(--navy); color:#fff; border-color:var(--navy); }
+  main{ padding:14px; max-width:900px; margin:0 auto; }
+  h1{ font-size:22px; color:#fff; margin:0 0 4px; }
+  h2{ font-size:17px; color:#a9c4dd; margin:20px 0 8px; border-bottom:1px solid var(--line); padding-bottom:4px; }
+  h3{ font-size:14px; color:var(--orange); margin:14px 0 4px; }
+  p{ line-height:1.5; color:var(--text); }
+  .muted{ color:var(--dim); font-size:13px; }
+  .card{ background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:12px; margin:8px 0; cursor:pointer; }
+  .card:hover{ border-color:var(--navy); }
+  .card h3{ margin:0 0 4px; color:#fff; }
+  .badge{ display:inline-block; background:var(--navy); color:#cfe0f0; font-size:11px; padding:2px 7px; border-radius:4px; margin-right:6px; }
+  .badge.orange{ background:var(--orange); color:#1a1300; }
+  table{ width:100%; border-collapse:collapse; margin:6px 0; font-size:13px; }
+  th,td{ text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th{ color:#a9c4dd; }
+  .flag{ border-left:3px solid var(--orange); background:#20242a; padding:8px 10px; margin:8px 0; border-radius:0 6px 6px 0; }
+  .mono{ font-family:ui-monospace,Menlo,Consolas,monospace; font-size:12px; background:#0e141a; padding:8px; border-radius:6px; overflow-x:auto; white-space:pre-wrap; }
+  .kv{ display:grid; grid-template-columns:auto 1fr; gap:2px 12px; font-size:13px; }
+  .kv dt{ color:var(--dim); } .kv dd{ margin:0; }
+  button.act{ background:var(--navy); color:#fff; border:none; border-radius:6px; padding:9px 14px; font-size:14px; cursor:pointer; margin:4px 4px 4px 0; }
+  button.act.orange{ background:var(--orange); color:#1a1300; }
+  textarea,input{ width:100%; background:#0e141a; color:var(--text); border:1px solid var(--line); border-radius:6px; padding:8px; font-size:13px; font-family:inherit; }
+  .back{ color:#a9c4dd; cursor:pointer; font-size:13px; display:inline-block; margin-bottom:8px; }
+  .ph{ border:2px dashed var(--line); border-radius:8px; padding:24px; text-align:center; color:var(--dim); }
+  .row{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+  .chg{ font-size:13px; padding:8px 0; border-bottom:1px solid var(--line); }
+  .chg b{ color:#fff; }
+</style>
+</head>
+<body>
+<header><b>CASTLE</b><span>Centralized Archive &amp; Systems Tracking for Local Engineering</span></header>
+<nav id="nav"></nav>
+<main id="view"><p class="muted">Loading the keep…</p></main>
+
+<script>
+/* ============ CASTLE app — functionality first, basic GUI ============ */
+const DATA_BASE = './data';           // repo path to the JSON files
+const state = { index:null, vehicles:{}, reports:null, timeline:null, architect:null };
+const $ = (h)=>{ const t=document.createElement('template'); t.innerHTML=h.trim(); return t.content.firstChild; };
+const esc = (s)=> (s==null?'':String(s)).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+async function loadJSON(path){ const r=await fetch(path,{cache:'no-store'}); if(!r.ok) throw new Error(path); return r.json(); }
+
+async function boot(){
+  try{
+    state.index = await loadJSON(`${DATA_BASE}/index.json`);
+    state.reports = await loadJSON(`${DATA_BASE}/reports.json`).catch(()=>({reports:[]}));
+    state.timeline = await loadJSON(`${DATA_BASE}/timeline.json`).catch(()=>({entries:[]}));
+    state.architect = await loadJSON(`${DATA_BASE}/architect.json`).catch(()=>({entries:[]}));
+  }catch(e){
+    document.getElementById('view').innerHTML = `<div class="flag">Could not load the archive index. Make sure <b>${DATA_BASE}/index.json</b> exists in the repo. (${esc(e.message)})</div>`;
+    return;
+  }
+  buildNav();
+  route('fleet');
+}
+
+const TABS = [
+  ['fleet','Fleet'], ['ifo','IFO'], ['reports','Reports'],
+  ['timeline','Timeline'], ['architect','Architect'], ['photos','Photos'], ['data','Import / Backup']
+];
+function buildNav(){
+  const nav=document.getElementById('nav'); nav.innerHTML='';
+  TABS.forEach(([id,label])=>{ const b=$(`<button data-tab="${id}">${label}</button>`); b.onclick=()=>route(id); nav.appendChild(b); });
+}
+function setActive(tab){ document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab)); }
+
+function route(tab, arg){
+  setActive(tab);
+  const v=document.getElementById('view'); window.scrollTo(0,0);
+  if(tab==='fleet') return arg ? renderVehicle(v,arg) : renderFleet(v);
+  if(tab==='ifo') return renderIFO(v);
+  if(tab==='reports') return renderReports(v);
+  if(tab==='timeline') return renderTimeline(v);
+  if(tab==='architect') return renderArchitect(v);
+  if(tab==='photos') return renderPhotos(v);
+  if(tab==='data') return renderData(v);
+}
+
+/* ---------- FLEET REGISTRY ---------- */
+function renderFleet(v){
+  const ix=state.index;
+  const byClass={};
+  ix.vehicles.forEach(veh=>{ (byClass[veh.class]=byClass[veh.class]||[]).push(veh); });
+  let html = `<h1>${esc(ix.castle.company)}</h1><p class="muted">${esc(ix.castle.motto)}</p>`;
+  html += `<h2>Fleet</h2>`;
+  Object.keys(byClass).sort().forEach(cls=>{
+    html += `<h3>${esc(cls)} — ${esc((ix.taxonomy.classes.find(c=>c.code===cls[0])||{}).name||'')}</h3>`;
+    byClass[cls].forEach(veh=>{
+      html += `<div class="card" data-id="${esc(veh.id)}">
+        <h3>${esc(veh.designation)}</h3>
+        <div><span class="badge">${esc(veh.class)}</span><span class="badge ${veh.status==='teased'?'orange':''}">${esc(veh.status)}</span> <span class="muted">${esc(veh.role)}</span></div>
+      </div>`;
+    });
+  });
+  html += `<h2>Class taxonomy</h2><div class="kv">`;
+  ix.taxonomy.classes.forEach(c=>{ html += `<dt>${esc(c.code)}X — ${esc(c.name)}</dt><dd class="muted">${esc(c.desc)}</dd>`; });
+  html += `</div><p class="muted" style="margin-top:8px">${esc(ix.taxonomy.note)}</p>`;
+  v.innerHTML=html;
+  v.querySelectorAll('.card').forEach(c=> c.onclick=()=>route('fleet', c.dataset.id));
+}
+
+/* ---------- VEHICLE ENTRY ---------- */
+async function renderVehicle(v, id){
+  v.innerHTML = `<p class="muted">Loading ${esc(id)}…</p>`;
+  let d = state.vehicles[id];
+  if(!d){ try{ d = await loadJSON(`${DATA_BASE}/vehicles/${id}.json`); state.vehicles[id]=d; }
+    catch(e){ v.innerHTML=`<span class="back">← Fleet</span><div class="flag">Could not load vehicle <b>${esc(id)}</b>.</div>`; v.querySelector('.back').onclick=()=>route('fleet'); return; } }
+  const s=d.specs||{};
+  let h = `<span class="back">← Fleet</span>`;
+  h += `<h1>${esc(d.designation)}</h1>`;
+  h += `<div class="row"><span class="badge">${esc(d.class)} · ${esc(d.classQuality)}</span><span class="badge ${d.status==='teased'?'orange':''}">${esc(d.status)}</span></div>`;
+  h += `<p>${esc(d.description||d.summary)}</p>`;
+
+  // Specs
+  h += `<h2>Specifications</h2><div class="kv">`;
+  for(const k in s){ if(k==='deltaV'||typeof s[k]==='object') continue; h += `<dt>${esc(k)}</dt><dd>${esc(s[k])}</dd>`; }
+  h += `</div>`;
+  if(s.deltaV){ const dv=s.deltaV; h+=`<h3>Δv</h3><div class="kv">`;
+    for(const k in dv){ h+=`<dt>${esc(k)}</dt><dd>${esc(dv[k])}</dd>`; } h+=`</div>`; }
+
+  h += sectionList('Components', d.components, c=>`<b>${esc(c.name)}</b> — ${esc(c.what)}<div class="muted">${esc(c.location||'')}${c.detail?' · '+esc(c.detail):''}</div>`);
+  h += sectionList('Capabilities', d.capabilities, c=>`<b>${esc(c.name)}</b><div class="muted">${esc(c.detail)}</div>`);
+  h += sectionList('Modules', d.modules, m=>`<b>${esc(m.name)}</b>${m.mass_t?` <span class="muted">(${esc(m.mass_t)} t)</span>`:''}<div class="muted">${esc(m.purpose)}</div>`);
+
+  // Calculations
+  if(d.calculations && d.calculations.length){ h+=`<h2>Calculations</h2>`;
+    d.calculations.forEach(c=>{ h+=`<h3>${esc(c.title)}</h3><div class="mono">method: ${esc(c.method)}\nresult: ${esc(c.result)}${c.note?'\nnote:   '+esc(c.note):''}</div>`; }); }
+
+  // Deep sections
+  if(d.sections && d.sections.length){ h+=`<h2>Detail</h2>`;
+    d.sections.forEach(sec=>{ h+= sec.flag ? `<div class="flag"><b>${esc(sec.heading)}</b><br>${esc(sec.body)}</div>` : `<h3>${esc(sec.heading)}</h3><p>${esc(sec.body)}</p>`; }); }
+
+  // Blueprint
+  if(d.blueprint){ h+=`<h2>Blueprint</h2><div class="mono">${esc(d.blueprint.frame)}\n\n${esc(d.blueprint.stations)}${d.blueprint.notes?'\n\n'+esc(d.blueprint.notes):''}</div>`; }
+
+  // Comparisons
+  if(d.comparisons && d.comparisons.length){ h+=`<h2>Comparisons</h2>`;
+    d.comparisons.forEach(cmp=>{ h+=`<h3>vs ${esc(cmp.against)} <span class="muted">(${esc(cmp.type)})</span></h3><table><tr><th></th><th>${esc(d.designation)}</th><th>${esc(cmp.against)}</th></tr>`;
+      cmp.rows.forEach(r=>{ h+=`<tr><td class="muted">${esc(r.label)}</td><td>${esc(r.this)}</td><td>${esc(r.other)}</td></tr>`; }); h+=`</table>`; }); }
+
+  // Decisions
+  if(d.decisions && d.decisions.length){ h+=`<h2>Decisions</h2>`;
+    d.decisions.forEach(dc=>{ h+=`<div class="chg"><b>${esc(dc.chose)}</b> over ${esc(dc.over)}<div class="muted">${esc(dc.why)}</div></div>`; }); }
+
+  // Open items
+  if(d.openItems && d.openItems.length){ h+=`<h2>Open items</h2>`; d.openItems.forEach(o=> h+=`<div class="flag">${esc(o)}</div>`); }
+
+  // Changelog
+  if(d.changelog && d.changelog.length){ h+=`<h2>Changelog</h2>`;
+    d.changelog.forEach(c=>{ h+=`<div class="chg"><b>${esc(c.what)}</b> <span class="muted">${esc(c.date)}</span><div class="muted">${esc(c.why)}</div></div>`; }); }
+
+  v.innerHTML=h;
+  v.querySelector('.back').onclick=()=>route('fleet');
+}
+function sectionList(title, arr, fmt){ if(!arr||!arr.length) return ''; let h=`<h2>${esc(title)}</h2>`; arr.forEach(x=> h+=`<div class="chg">${fmt(x)}</div>`); return h; }
+
+/* ---------- IFO (placeholder this pass) ---------- */
+function renderIFO(v){
+  const ix=state.index;
+  let h=`<h1>Interactive Fleet Overview</h1><p class="muted">Placeholder. The interactive exploded-view vehicles, animations, and mini-mission scenes come in a later pass. The buttons and structure below are the reserved hooks.</p>`;
+  h+=`<div class="ph">IFO stage — vehicles fly side by side here (2.5D, two ¾ angles, toggle button).</div>`;
+  h+=`<div class="row" style="margin-top:10px">`;
+  ix.vehicles.forEach(veh=> h+=`<button class="act" disabled>${esc(veh.designation)}</button>`);
+  h+=`</div>`;
+  h+=`<div class="row" style="margin-top:10px"><button class="act" disabled>Toggle ¾ high-front / low-back</button><button class="act orange" disabled>Play mini-mission</button></div>`;
+  h+=`<h2>Reserved per vehicle</h2><div class="mono">icon: (ICON drawing)\nviews: { highFront, lowBack } — base image + component hotspots\nmissionSequence: [ launch, separate, orbit, land … ]</div>`;
+  v.innerHTML=h;
+}
+
+/* ---------- REPORTS (immutable, Claude's) ---------- */
+function renderReports(v){
+  const r=state.reports.reports||[];
+  let h=`<h1>Engineering Reports</h1><p class="muted">Session records. Read-only — these are the archive's audit trail.</p>`;
+  if(!r.length) h+=`<div class="ph">No reports yet.</div>`;
+  r.forEach(rep=>{ h+=`<div class="card" style="cursor:default"><h3>${esc(rep.title)}</h3>
+    <div class="muted">${esc(rep.date)} · ${esc(rep.author||'Claude')} · ${(rep.vehicles||[]).map(esc).join(', ')}</div>
+    <p>${esc(rep.body)}</p></div>`; });
+  v.innerHTML=h;
+}
+
+/* ---------- TIMELINE ---------- */
+function renderTimeline(v){
+  const e=state.timeline.entries||[];
+  let h=`<h1>Timeline</h1>`;
+  if(!e.length) h+=`<div class="ph">No entries yet.</div>`;
+  e.slice().reverse().forEach(en=>{ h+=`<div class="card" style="cursor:default"><h3>${esc(en.title)}</h3>
+    <div class="muted">${esc(en.date)}${(en.vehicles&&en.vehicles.length)?' · '+en.vehicles.map(esc).join(', '):''}</div>
+    <p>${esc(en.body)}</p></div>`; });
+  v.innerHTML=h;
+}
+
+/* ---------- ARCHITECT LOG (yours: text + voice) ---------- */
+function renderArchitect(v){
+  const e=state.architect.entries||[];
+  let h=`<h1>Chief Architect Log</h1><p class="muted">Franco's own record — text and voice. Editable by you; import via the Import tab or record below (local to this device this pass).</p>`;
+  h+=`<h2>New voice note</h2><div class="row"><button class="act" id="recBtn">● Record</button><span id="recStatus" class="muted"></span></div><div id="recOut"></div>`;
+  h+=`<h2>Entries</h2>`;
+  if(!e.length) h+=`<div class="ph">No entries yet.</div>`;
+  e.slice().reverse().forEach(en=>{ h+=`<div class="card" style="cursor:default"><h3>${esc(en.title)}</h3>
+    <div class="muted">${esc(en.date)} · ${esc(en.type||'text')}</div><p>${esc(en.body)}</p></div>`; });
+  v.innerHTML=h;
+  wireRecorder(v);
+}
+function wireRecorder(v){
+  const btn=v.querySelector('#recBtn'), st=v.querySelector('#recStatus'), out=v.querySelector('#recOut');
+  let mr, chunks=[], rec=false;
+  btn.onclick=async()=>{
+    if(!rec){
+      try{ const stream=await navigator.mediaDevices.getUserMedia({audio:true}); mr=new MediaRecorder(stream); chunks=[];
+        mr.ondataavailable=e=>chunks.push(e.data);
+        mr.onstop=()=>{ const blob=new Blob(chunks,{type:'audio/webm'}); const url=URL.createObjectURL(blob);
+          out.innerHTML=`<audio controls src="${url}" style="width:100%;margin-top:8px"></audio><p class="muted">Recorded locally. Saving voice notes into the repo is a later pass.</p>`; };
+        mr.start(); rec=true; btn.textContent='■ Stop'; st.textContent='recording…';
+      }catch(e){ st.textContent='mic unavailable: '+e.message; }
+    } else { mr.stop(); rec=false; btn.textContent='● Record'; st.textContent='saved below'; }
+  };
+}
+
+/* ---------- PHOTOS ---------- */
+function renderPhotos(v){
+  let h=`<h1>Photos</h1><p class="muted">Attach a photo with a title, date, and description. Local to this device this pass; committing images to the repo is a later step.</p>`;
+  h+=`<div class="card" style="cursor:default">
+    <input type="file" id="pf" accept="image/*"><br><br>
+    <input id="pt" placeholder="Title"><br><br>
+    <input id="pd" type="date"><br><br>
+    <textarea id="pdesc" rows="2" placeholder="Description"></textarea><br>
+    <button class="act" id="padd">Add photo</button></div>`;
+  h+=`<div id="plist"></div>`;
+  v.innerHTML=h;
+  const list=v.querySelector('#plist'); const store=[];
+  v.querySelector('#padd').onclick=()=>{
+    const f=v.querySelector('#pf').files[0]; if(!f){ alert('Pick an image first.'); return; }
+    const url=URL.createObjectURL(f);
+    const item={ title:v.querySelector('#pt').value||'(untitled)', date:v.querySelector('#pd').value||'', desc:v.querySelector('#pdesc').value||'' };
+    store.push(item);
+    list.insertBefore($(`<div class="card" style="cursor:default"><img src="${url}" style="max-width:100%;border-radius:6px"><h3>${esc(item.title)}</h3><div class="muted">${esc(item.date)}</div><p>${esc(item.desc)}</p></div>`), list.firstChild);
+  };
+}
+
+/* ---------- IMPORT / BACKUP ---------- */
+function renderData(v){
+  let h=`<h1>Import / Backup</h1>`;
+  h+=`<h2>Import an entry</h2><p class="muted">Paste a JSON entry Claude generated (a vehicle, report, or log). It's validated and shown here; to persist it, save the file into the repo.</p>`;
+  h+=`<textarea id="imp" rows="8" placeholder='Paste JSON here…'></textarea><br><button class="act" id="impBtn">Validate</button><div id="impOut"></div>`;
+  h+=`<h2>Backup</h2><p class="muted">Export the whole loaded archive to one file, or re-import it on another device.</p>`;
+  h+=`<button class="act" id="expBtn">Export archive</button>`;
+  v.innerHTML=h;
+  v.querySelector('#impBtn').onclick=()=>{
+    const o=v.querySelector('#impOut'); try{ const d=JSON.parse(v.querySelector('#imp').value);
+      o.innerHTML=`<div class="flag" style="border-color:#3a7">Valid JSON. Top-level keys: <b>${Object.keys(d).map(esc).join(', ')}</b>. Save this as the matching file in the repo (e.g. <b>data/vehicles/&lt;id&gt;.json</b>) and reload.</div>`;
+    }catch(e){ o.innerHTML=`<div class="flag">Invalid JSON: ${esc(e.message)}</div>`; }
+  };
+  v.querySelector('#expBtn').onclick=()=>{
+    const dump={ index:state.index, vehicles:state.vehicles, reports:state.reports, timeline:state.timeline, architect:state.architect };
+    const blob=new Blob([JSON.stringify(dump,null,2)],{type:'application/json'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='castle-backup.json'; a.click();
+  };
+}
+
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
+boot();
+</script>
+</body>
+</html>

@@ -1,0 +1,69 @@
+{
+  "id": "vx13",
+  "name": "(unnamed)",
+  "designation": "VX-13",
+  "class": "VX",
+  "classQuality": "Versatile",
+  "role": "Mid-class orbital (a larger EX-3)",
+  "status": "teased",
+  "summary": "The Versatile mid-class orbital vehicle — a scaled-up EX-3, roughly twice its capability, on two TX-04 boosters. Sizing not yet worked.",
+  "description": "VX-13 is the Versatile-class step between the EX and LX orbital vehicles: a larger EX-3, with more of its own propellant and somewhat interior-capable modules. The fleet doc places it as “VX-13 > EX-3” and “LX-23 > VX-13.” Detailed sizing has not yet been done.",
+  "specs": {
+    "type": "Mid-class reusable orbiter (scaled EX-3)",
+    "payload_t": "~20–25 (target, not worked)",
+    "booster": "2× TX-04 Pauldron",
+    "range": "LEO and return",
+    "note": "Twice the EX-3 on twice the boosters, plus more own fuel and interior-capable modules."
+  },
+  "components": [],
+  "capabilities": [
+    {
+      "name": "Mid-class orbital delivery",
+      "detail": "Bridges the EX-3 (10 t) and LX-23 (50 t) — a ~20–25 t class on two boosters. Somewhat interior-capable modules (more than EX, less than LX station volume)."
+    }
+  ],
+  "modules": [],
+  "calculations": [],
+  "blueprint": {
+    "frame": "Not yet defined.",
+    "stations": "",
+    "notes": "Scales the EX-3 configuration upward."
+  },
+  "comparisons": [
+    {
+      "against": "EX-3 / LX-23",
+      "type": "fleet",
+      "rows": [
+        {
+          "label": "Payload",
+          "this": "~20–25 t",
+          "other": "EX-3 10 t / LX-23 50 t"
+        },
+        {
+          "label": "Boosters",
+          "this": "2× TX-04",
+          "other": "EX-3 1× / LX-23 3×"
+        }
+      ]
+    }
+  ],
+  "sections": [
+    {
+      "heading": "Status",
+      "flag": true,
+      "body": "VX-13 is teased in the fleet doc but not engineered. Payload class (~20–25 t), two-booster stack, and interior-capable modules are placeholders pending a real sizing pass."
+    }
+  ],
+  "changelog": [],
+  "decisions": [],
+  "openItems": [
+    "Full sizing pass: dry mass, propellant, per-stage Δv on 2× TX-04.",
+    "Name (fleet uses Round Table names)."
+  ],
+  "icon": null,
+  "missionSequence": [],
+  "views": {
+    "highFront": null,
+    "lowBack": null
+  }
+}
