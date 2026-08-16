@@ -67,8 +67,14 @@
 <nav id="nav"></nav>
 <main id="view"><p class="muted">Loading the keep…</p></main>
 
+<script>
+/* Global error surface — if the module below fails to load/parse, show it instead of a blank page. */
+window.addEventListener('error', e=>{ const v=document.getElementById('view'); if(v && !window.__castleBooted){ v.innerHTML='<div style="border-left:3px solid #C2820A;background:#20242a;padding:10px;border-radius:6px;color:#f0c98a">App error (v2 build): '+(e.message||e.error||'unknown')+'</div>'; } });
+window.addEventListener('unhandledrejection', e=>{ const v=document.getElementById('view'); if(v && !window.__castleBooted){ v.innerHTML='<div style="border-left:3px solid #C2820A;background:#20242a;padding:10px;border-radius:6px;color:#f0c98a">Load error (v2 build): '+((e.reason&&e.reason.message)||e.reason||'unknown')+'</div>'; } });
+</script>
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+console.log('CASTLE v2 build loaded');
 
 /* ===== CONFIG ===== */
 const SUPABASE_URL = 'https://tvlkxrqrwjgfivwsbniu.supabase.co';
@@ -88,6 +94,8 @@ async function boot(){
   }catch(e){
     document.getElementById('view').innerHTML=`<div class="flag">Could not load <b>${DATA_BASE}/index.json</b>. (${esc(e.message)})</div>`; return;
   }
+  window.__castleBooted = true;
+  const hdr=document.querySelector('header span'); if(hdr) hdr.textContent += '  ·  v2';
   buildNav(); route('fleet');
 }
 const TABS=[['fleet','Fleet'],['ifo','IFO'],['reports','Reports'],['timeline','Timeline'],['architect','Architect'],['photos','Photos'],['data','Backup']];
@@ -131,6 +139,107 @@ async function renderVehicle(v,id){
   if(s.deltaV){ h+=`<h3>Δv</h3><div class="kv">`; for(const k in s.deltaV) h+=`<dt>${esc(k)}</dt><dd>${esc(s.deltaV[k])}</dd>`; h+=`</div>`; }
   const L=(t,a,f)=>{ if(!a||!a.length)return''; let x=`<h2>${esc(t)}</h2>`; a.forEach(o=>x+=`<div class="chg">${f(o)}</div>`); return x; };
   h+=L('Components',d.components,c=>`<b>${esc(c.name)}</b> — ${esc(c.what)}<div class="muted">${esc(c.location||'')}${c.detail?' · '+esc(c.detail):''}</div>`);
+  h+=L('Capabilities',d.capabilities,c=>`<b>${esc(c.name)}</b><div class="muted">${esc(c.detail)}</div>`);
+  h+=L('Modules',d.modules,m=>`<b>${esc(m.name)}</b>${m.mass_t?` <span class="muted">(${esc(m.mass_t)} t)</span>`:''}<div class="muted">${esc(m.purpose)}</div>`);
+  if(d.calculations&&d.calculations.length){ h+=`<h2>Calculations</h2>`; d.calculations.forEach(c=> h+=`<h3>${esc(c.title)}</h3><div class="mono">method: ${esc(c.method)}\nresult: ${esc(c.result)}${c.note?'\nnote:   '+esc(c.note):''}</div>`); }
+  if(d.sections&&d.sections.length){ h+=`<h2>Detail</h2>`; d.sections.forEach(x=> h+= x.flag?`<div class="flag"><b>${esc(x.heading)}</b><br>${esc(x.body)}</div>`:`<h3>${esc(x.heading)}</h3><p>${esc(x.body)}</p>`); }
+  if(d.blueprint){ h+=`<h2>Blueprint</h2><div class="mono">${esc(d.blueprint.frame)}\n\n${esc(d.blueprint.stations)}${d.blueprint.notes?'\n\n'+esc(d.blueprint.notes):''}</div>`; }
+  if(d.comparisons&&d.comparisons.length){ h+=`<h2>Comparisons</h2>`; d.comparisons.forEach(c=>{ h+=`<h3>vs ${esc(c.against)} <span class="muted">(${esc(c.type)})</span></h3><table><tr><th></th><th>${esc(d.designation)}</th><th>${esc(c.against)}</th></tr>`; c.rows.forEach(r=> h+=`<tr><td class="muted">${esc(r.label)}</td><td>${esc(r.this)}</td><td>${esc(r.other)}</td></tr>`); h+=`</table>`; }); }
+  if(d.decisions&&d.decisions.length){ h+=`<h2>Decisions</h2>`; d.decisions.forEach(x=> h+=`<div class="chg"><b>${esc(x.chose)}</b> over ${esc(x.over)}<div class="muted">${esc(x.why)}</div></div>`); }
+  if(d.openItems&&d.openItems.length){ h+=`<h2>Open items</h2>`; d.openItems.forEach(o=> h+=`<div class="flag">${esc(o)}</div>`); }
+  if(d.changelog&&d.changelog.length){ h+=`<h2>Changelog</h2>`; d.changelog.forEach(c=> h+=`<div class="chg"><b>${esc(c.what)}</b> <span class="muted">${esc(c.date)}</span><div class="muted">${esc(c.why)}</div></div>`); }
+  v.innerHTML=h; v.querySelector('.back').onclick=()=>route('fleet');
+}
+
+/* ---------- IFO flat placeholder ---------- */
+function renderIFO(v){
+  const ix=state.index;
+  let h=`<h1>Interactive Fleet Overview</h1><p class="muted">Flat placeholder layout. The 2.5D exploded views, animations, and mini-missions are the next (art) pass — this shows the intended structure.</p>`;
+  h+=`<div class="ifo-stage"><div class="ifo-ship"></div><div class="ifo-ship" style="width:120px;opacity:.7"></div><div class="ifo-ship"></div>
+      <div style="position:absolute;top:8px;right:10px" class="muted">¾ view</div></div>`;
+  h+=`<div class="row" style="margin-top:10px"><button class="act ghost">◀ ¾ high-front</button><button class="act ghost">¾ low-back ▶</button><button class="act orange">▶ Play mini-mission</button></div>`;
+  h+=`<h2>Select vehicle</h2><div class="row">`;
+  ix.vehicles.forEach(x=> h+=`<span class="chip">${esc(x.designation)}</span>`);
+  h+=`</div>`;
+  h+=`<h2>Component callouts (sample)</h2>`;
+  ['Nose','Rings','LOX / CH₄ tanks','Engines','Fins / wings','Compacting mechanism'].forEach(c=> h+=`<div class="chg"><span class="ifo-dot"></span>${esc(c)} <span class="muted">— click to deploy + narrate (later pass)</span></div>`);
+  h+=`<h2>Reserved per vehicle (in JSON)</h2><div class="mono">icon: ICON drawing\nviews: { highFront, lowBack } — base image + hotspots\nmissionSequence: [ launch, separate, orbit, land … ]</div>`;
+  v.innerHTML=h;
+}
+
+/* ---------- REPORTS (read-only, repo JSON) ---------- */
+function renderReports(v){
+  const r=(state.reports.reports)||[];
+  let h=`<h1>Engineering Reports</h1><p class="muted">Session records from the repo. Read-only audit trail.</p>`;
+  if(!r.length) h+=`<div class="ph">No reports yet.</div>`;
+  r.forEach(x=> h+=`<div class="card"><h3>${esc(x.title)}</h3><div class="muted">${esc(x.date)} · ${esc(x.author||'Claude')} · ${(x.vehicles||[]).map(esc).join(', ')}</div><p>${esc(x.body)}</p></div>`);
+  v.innerHTML=h;
+}
+
+/* ---------- TIMELINE (Supabase, editable, horizontal) ---------- */
+async function renderTimeline(v){
+  v.innerHTML=`<h1>Timeline</h1><p class="muted">Loading…</p>`;
+  const { data, error } = await sb.from('timeline').select('*').order('entry_date',{ascending:true});
+  let h=`<h1>Timeline</h1><div id="st" class="status"></div>`;
+  if(error){ h+=`<div class="flag">Could not load timeline: ${esc(error.message)}</div>`; }
+  h+=`<div class="tl-rail" id="rail">`;
+  (data||[]).forEach(e=>{ h+=`<div class="tl-node" data-id="${e.id}"><div class="tl-dot"></div><div class="tl-date">${esc(e.entry_date||'')}</div><div class="tl-title">${esc(e.title)}</div></div>`; });
+  h+=`</div><div id="tlcard"></div>`;
+  h+=`<h2>Add / edit entry</h2><div class="card">
+    <input id="t_title" placeholder="Title">
+    <input id="t_date" type="date">
+    <input id="t_veh" placeholder="Vehicle ids, comma-separated (e.g. lx23,tx04)">
+    <textarea id="t_body" rows="3" placeholder="Details"></textarea>
+    <input type="hidden" id="t_id">
+    <div class="row"><button class="act" id="t_save">Save</button><button class="act ghost" id="t_clear">Clear</button></div>
+  </div>`;
+  v.innerHTML=h;
+  const rows=data||[];
+  v.querySelectorAll('.tl-node').forEach(n=> n.onclick=()=>showTLCard(v, rows.find(r=>r.id===n.dataset.id)));
+  v.querySelector('#t_save').onclick=()=>saveTimeline(v);
+  v.querySelector('#t_clear').onclick=()=>{ ['t_title','t_date','t_veh','t_body','t_id'].forEach(i=>v.querySelector('#'+i).value=''); };
+}
+function showTLCard(v,e){ if(!e)return; const c=v.querySelector('#tlcard');
+  c.innerHTML=`<div class="card"><h3>${esc(e.title)}</h3><div class="muted">${esc(e.entry_date||'')}${(e.vehicles&&e.vehicles.length)?' · '+e.vehicles.map(esc).join(', '):''}</div><p>${esc(e.body)}</p>
+    <div class="row"><button class="act ghost" id="tl_edit">Edit</button><button class="act danger" id="tl_del">Delete</button></div></div>`;
+  c.querySelector('#tl_edit').onclick=()=>{ v.querySelector('#t_title').value=e.title||''; v.querySelector('#t_date').value=e.entry_date||''; v.querySelector('#t_veh').value=(e.vehicles||[]).join(','); v.querySelector('#t_body').value=e.body||''; v.querySelector('#t_id').value=e.id; window.scrollTo(0,document.body.scrollHeight); };
+  c.querySelector('#tl_del').onclick=async()=>{ if(!confirm('Delete this entry?'))return; const {error}=await sb.from('timeline').delete().eq('id',e.id); if(error)return status(v,'err',error.message); route('timeline'); };
+}
+async function saveTimeline(v){
+  const id=v.querySelector('#t_id').value;
+  const veh=v.querySelector('#t_veh').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const rec={ title:v.querySelector('#t_title').value, entry_date:v.querySelector('#t_date').value||null, vehicles:veh, body:v.querySelector('#t_body').value, updated_at:new Date().toISOString() };
+  if(!rec.title){ return status(v,'err','Title required.'); }
+  const q = id ? sb.from('timeline').update(rec).eq('id',id) : sb.from('timeline').insert(rec);
+  const {error}=await q; if(error) return status(v,'err',error.message);
+  route('timeline');
+}
+
+/* ---------- ARCHITECT (Supabase, editable) ---------- */
+async function renderArchitect(v){
+  v.innerHTML=`<h1>Chief Architect Log</h1><p class="muted">Loading…</p>`;
+  const { data, error } = await sb.from('architect_log').select('*').order('entry_date',{ascending:false});
+  let h=`<h1>Chief Architect Log</h1><p class="muted">Franco's own record. Editable, saved to CASTLE's database.</p><div id="st" class="status"></div>`;
+  h+=`<h2>New voice note (local)</h2><div class="row"><button class="act" id="recBtn">● Record</button><span id="recStatus" class="muted"></span></div><div id="recOut"></div>`;
+  h+=`<h2>Add / edit entry</h2><div class="card">
+    <input id="a_title" placeholder="Title">
+    <input id="a_date" type="date">
+    <textarea id="a_body" rows="4" placeholder="Write your entry"></textarea>
+    <input type="hidden" id="a_id">
+    <div class="row"><button class="act" id="a_save">Save</button><button class="act ghost" id="a_clear">Clear</button></div>
+  </div><h2>Entries</h2><div id="alist"></div>`;
+  if(error) h+=`<div class="flag">Could not load: ${esc(error.message)}</div>`;
+  v.innerHTML=h;
+  const list=v.querySelector('#alist');
+  (data||[]).forEach(e=>{ const card=$(`<div class="card"><h3>${esc(e.title)}</h3><div class="muted">${esc(e.entry_date||'')} · ${esc(e.entry_type||'text')}</div><p>${esc(e.body)}</p><div class="row"><button class="act ghost">Edit</button><button class="act danger">Delete</button></div></div>`);
+    const [ed,del]=card.querySelectorAll('button');
+    ed.onclick=()=>{ v.querySelector('#a_title').value=e.title||''; v.querySelector('#a_date').value=e.entry_date||''; v.querySelector('#a_body').value=e.body||''; v.querySelector('#a_id').value=e.id; window.scrollTo(0,0); };
+    del.onclick=async()=>{ if(!confirm('Delete this entry?'))return; const {error}=await sb.from('architect_log').delete().eq('id',e.id); if(error)return status(v,'err',error.message); route('architect'); };
+    list.appendChild(card);
+  });
+  v.querySelector('#a_save').onclick=async()=>{
+    const id=v.querySelector('#a_id').value;
+    const rec={ title:v.querySelector('#a_titl
   h+=L('Capabilities',d.capabilities,c=>`<b>${esc(c.name)}</b><div class="muted">${esc(c.detail)}</div>`);
   h+=L('Modules',d.modules,m=>`<b>${esc(m.name)}</b>${m.mass_t?` <span class="muted">(${esc(m.mass_t)} t)</span>`:''}<div class="muted">${esc(m.purpose)}</div>`);
   if(d.calculations&&d.calculations.length){ h+=`<h2>Calculations</h2>`; d.calculations.forEach(c=> h+=`<h3>${esc(c.title)}</h3><div class="mono">method: ${esc(c.method)}\nresult: ${esc(c.result)}${c.note?'\nnote:   '+esc(c.note):''}</div>`); }
