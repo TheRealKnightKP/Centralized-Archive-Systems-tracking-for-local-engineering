@@ -16,5 +16,5 @@ self.addEventListener('fetch', e => {
 
 /*
 Update log:
-V1: The first version.
-V1.1: Supabase DB entries, timeline horizontal, added edit, add, delete, to entries, and added placeholder for IFO
+V1: The first version. Sat, Aug 15
+V1.1: Supabase DB entries, timeline horizontal, added edit, add, delete, to entries, and added placeholder for IFO Sat, Aug 15
