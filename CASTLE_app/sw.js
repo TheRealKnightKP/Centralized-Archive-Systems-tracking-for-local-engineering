@@ -1,0 +1,15 @@
+/* CASTLE service worker — basic offline shell. Data always fetched fresh (no-store). */
+const CACHE = 'castle-v1';
+const SHELL = ['./', './index.html', './manifest.json'];
+self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(()=>self.skipWaiting())); });
+self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())); });
+self.addEventListener('fetch', e => {
+  const url = new URL(e.request.url);
+  // Always fetch data JSON fresh so repo updates show on load; fall back to cache offline.
+  if (url.pathname.includes('/data/')) {
+    e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));
+    return;
+  }
+  // Shell: cache-first.
+  e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+});

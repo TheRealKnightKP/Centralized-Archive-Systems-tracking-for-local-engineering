@@ -1,0 +1,314 @@
+{
+  "id": "lx23",
+  "name": "Ganelon",
+  "designation": "LX-23 Ganelon",
+  "class": "LX",
+  "classQuality": "Large-scale",
+  "role": "Heavy orbital flagship",
+  "status": "concept",
+  "summary": "The largest crewed utility spaceplane in the fleet — a reusable TSTO lifting-body that carries 50 t to LEO and lands under its own control.",
+  "description": "The LX-23 Ganelon is KnightShip’s heavy orbital flagship: the largest crewed utility spaceplane in the fleet. It is a two-stage-to-orbit lifting-body spaceplane, launched on three TX-04 Pauldrons, that carries up to 50 t to low Earth orbit and lands under its own control. All figures are preliminary concept-phase estimates; none has yet been through CFD or trajectory simulation.",
+  "specs": {
+    "type": "TSTO lifting-body spaceplane, crewed, reusable",
+    "length_m": 45,
+    "width_m": 15,
+    "height_m": 4.5,
+    "planform": "L/W ~3.0 (Shuttle-like glider)",
+    "dryMass_t": 60,
+    "payload_t": 50,
+    "propellant_t": 886,
+    "wetAtStaging_t": 996,
+    "range": "LEO (to the MX-79 node) and return; beyond-LEO via carried transfer vehicle",
+    "mainPropulsion": "3x methalox, ~816 kN each",
+    "booster": "3x TX-04 Pauldron, asparagus",
+    "deltaV": {
+      "stage1_ms": 3660,
+      "stage2_ms": 7780,
+      "total_ms": 11440,
+      "reserve_ms": 440,
+      "note": "Stage 1 = boosters (pad→staging). Stage 2 = LX-23 own tanks (staging→orbit). ~310 m/s working after ~130 m/s deorbit."
+    },
+    "landing": "belly-flop → lifting-body glide → dead-stick ~89 m/s (~321 km/h)",
+    "costPerFlight_M": 18.55,
+    "costPerKg": 371
+  },
+  "components": [
+    {
+      "name": "Lifting-body hull",
+      "what": "Near-wingless; the hull itself generates lift and IS the propellant tank",
+      "location": "full 45 m body",
+      "detail": "Flat shielded underside is the re-entry heat-shield plane; smooth domed top; widens 2 m nose → 15 m tail."
+    },
+    {
+      "name": "Main engines",
+      "what": "3x methalox, ~816 kN each",
+      "location": "aft (broad 15 m tail)",
+      "detail": "Burn LCH4/LOX; the tail houses engines and provides aft planform area for lift."
+    },
+    {
+      "name": "Boiloff-fed dual-mode thrusters",
+      "what": "One set does RCS, OMS, and propulsive landing",
+      "location": "3 positions along the body",
+      "detail": "Rotate on a swivel; fed warm gas (RCS) or liquid+ignite (OMS aimed along velocity / Landing aimed down). Removes dedicated OMS."
+    },
+    {
+      "name": "Boiloff canisters",
+      "what": "Collect naturally-boiled methalox gas",
+      "location": "behind each thruster bay (3 total)",
+      "detail": "Recapture gas that would be vented; merge attitude control with zero-boiloff management."
+    },
+    {
+      "name": "X-fins",
+      "what": "Aft control surfaces (4, in an X)",
+      "location": "aft",
+      "detail": "Thin control fins, not large wings."
+    },
+    {
+      "name": "Fore fin pair",
+      "what": "Forward control",
+      "location": "nose region",
+      "detail": ""
+    },
+    {
+      "name": "Module bays",
+      "what": "Two large combinable bays",
+      "location": "~stations 8–24 m",
+      "detail": "~300 m3 cargo; fits landers, GEO tugs, 15 m station modules, satellites to ~14 m."
+    },
+    {
+      "name": "Crew hab",
+      "what": "4-person basic (beds, bath, galley, ECLSS)",
+      "location": "forward section",
+      "detail": "~40 m3, ~10 m3/person, short-stay."
+    }
+  ],
+  "capabilities": [
+    {
+      "name": "Cargo hauler",
+      "detail": "~50 t payload in a ~300 m3 bay; carries dense/wide cargo nothing smaller in the fleet can."
+    },
+    {
+      "name": "Tanker",
+      "detail": "Hull mostly tank → ~985 t propellant to orbit, delivering ~50 t methalox to the MX-79 node per trip."
+    },
+    {
+      "name": "Carrier",
+      "detail": "Bay fits a lander, a GEO transfer vehicle, large station modules (15 m wide), or satellites to ~14 m."
+    },
+    {
+      "name": "Station",
+      "detail": "Gross 1,713 m3 vs ISS habitable ~915 m3 — outfitted with modules it rivals a small station, then lands. Its distinctive identity: station-class volume that returns to Earth and reflies."
+    },
+    {
+      "name": "Pseudo deep-space (fully fuelled)",
+      "detail": "Refuelled in orbit, full-tank vacuum Δv ~7,780 m/s (50 t) / ~9,740 m/s empty — enough to throw 50 t to Mars orbit and even return. Lacks the long-duration life support of a true LX-24; the propulsion closes, the habitability does not."
+    }
+  ],
+  "modules": [
+    {
+      "name": "Cargo module",
+      "purpose": "General dense/wide cargo to LEO",
+      "mass_t": 50
+    },
+    {
+      "name": "GEO transfer vehicle",
+      "purpose": "Released in LEO, self-flies to GEO (LX-23 does not fly to GEO itself)",
+      "mass_t": null
+    },
+    {
+      "name": "Lander",
+      "purpose": "Carried to LEO/handed off for surface missions",
+      "mass_t": null
+    },
+    {
+      "name": "Station modules",
+      "purpose": "Up to 15 m wide; build an orbital outpost",
+      "mass_t": null
+    }
+  ],
+  "calculations": [
+    {
+      "title": "Hull volume (D-section integration)",
+      "method": "Integrate D-section cross-sections along 45 m at 15 m max width; area = (π/4)·W·H per station, trapezoidal along length.",
+      "result": "Gross ~1,713 m3; −12% structural void → usable ~1,508 m3; −cargo 300 −crew 40 −systems 100 → tank ~1,068 m3 → ~886 t methalox at 830 kg/m3.",
+      "note": "Widening 14→15 m nearly doubled internal volume vs the old 8 m body and took the vehicle from volume-starved to closing."
+    },
+    {
+      "title": "Dry mass build-up (bottom-up)",
+      "method": "Sum itemized subsystems, then +15% growth margin.",
+      "result": "structure 27 + TPS 8 + propulsion 9 + gear 1.5 + hab 3.4 + avionics/power/shield 5.3 = ~53 t; +15% ≈ ~60 t.",
+      "note": "Payload trades ~1:1 with dry mass. 50 t holds if dry ≤ ~60 t."
+    },
+    {
+      "title": "Per-stage Δv (from real TX-04 masses)",
+      "method": "Asparagus with crossfeed: LX-23 mains draw from booster tanks so LX-23 separates full. Stage 1 MR from 3×TX-04 pushing the stack; Stage 2 MR from LX-23 full tank.",
+      "result": "Stage 1 ~3,660 m/s (Isp 330), Stage 2 ~7,780 m/s (Isp 360). Total ~11,440 m/s vs ~11,000 needed → ~440 m/s reserve at 50 t.",
+      "note": "~310 m/s working after ~130 m/s deorbit — enough for rendezvous, docking, phasing, trims, return unaided."
+    },
+    {
+      "title": "Hydrolox rejection (volume)",
+      "method": "Compare tank volume to hold equal impulse.",
+      "result": "Hydrolox needs ~1,970 m3 vs ~1,068 m3 available — ~1.8× too much (LH2 bulk ~360 vs methalox ~830 kg/m3).",
+      "note": "LX-23 is volume-limited, so the denser propellant wins despite lower Isp."
+    }
+  ],
+  "blueprint": {
+    "frame": "Length 45 m; max width 15 m at the tail tapering to ~2 m at the nose; peak height 4.5 m. Flat bottom, domed top (D-section).",
+    "stations": "Bridge/crew/hab forward; two module bays ~stations 8–24 m; aft control X-fins; forward fore-fin pair; engines at the broad 15 m tail.",
+    "notes": "L/W ~3.0. Cross-section widens continuously nose→tail."
+  },
+  "comparisons": [
+    {
+      "against": "Starship (full stack)",
+      "type": "external",
+      "rows": [
+        {
+          "label": "Max width",
+          "this": "15 m",
+          "other": "9 m"
+        },
+        {
+          "label": "Length/height",
+          "this": "45 m",
+          "other": "~50 m ship"
+        },
+        {
+          "label": "Payload to LEO",
+          "this": "~50 t",
+          "other": "100–200 t (target)"
+        },
+        {
+          "label": "Crewed reusable spaceplane",
+          "this": "Yes, runway landing",
+          "other": "No (cargo tube, propulsive)"
+        }
+      ]
+    },
+    {
+      "against": "Space Shuttle orbiter",
+      "type": "external",
+      "rows": [
+        {
+          "label": "Payload to LEO",
+          "this": "~50 t",
+          "other": "~27 t"
+        },
+        {
+          "label": "Wings",
+          "this": "Wingless lifting body",
+          "other": "Large delta wings"
+        },
+        {
+          "label": "Volume",
+          "this": "1,713 m3 gross",
+          "other": "smaller"
+        }
+      ]
+    },
+    {
+      "against": "EX-3 Percival",
+      "type": "fleet",
+      "rows": [
+        {
+          "label": "Payload to LEO",
+          "this": "~50 t",
+          "other": "10 t"
+        },
+        {
+          "label": "Cost/kg",
+          "this": "~$371",
+          "other": "~$297"
+        },
+        {
+          "label": "Role",
+          "this": "Heavy flagship / station",
+          "other": "Small-payload workhorse"
+        }
+      ]
+    }
+  ],
+  "sections": [
+    {
+      "heading": "Mission",
+      "flag": false,
+      "body": "The LX-23 delivers up to 50 t of payload, or two large modules, to low Earth orbit and returns. It reaches orbit under its own power with a modest maneuvering reserve (~440 m/s) and does its orbital work unaided. Refuelling at the MX-79 node is optional — used only to extend on-orbit Δv or stage a mission beyond LEO, not to reach orbit. Missions beyond LEO ride as a carried payload-vehicle released from the bay."
+    },
+    {
+      "heading": "Launch architecture — asparagus",
+      "flag": false,
+      "body": "Launches on three TX-04 Pauldrons in asparagus staging. Liftoff: all three Pauldrons and the LX-23 mains fire together, all drawing from the outer pair first so the center stays full. Outer pair drains and drops; remaining engines draw from the center; center drains and drops; the LX-23 continues to orbit on its own full tanks. Asparagus sheds each dead tank the instant it empties — the most mass-efficient staging known. The TX-04s are the methalox variant so they crossfeed the LX-23 mains and each other."
+    },
+    {
+      "heading": "Higher orbits — GEO by carried vehicle",
+      "flag": false,
+      "body": "The LX-23 does not fly itself to GEO. A LEO-to-GEO round trip on one tank would need ~98% propellant fraction — impossible. Instead GEO and beyond are payload: the LX-23 carries a dedicated transfer vehicle in its bay, reaches LEO, and releases it; the transfer vehicle makes the climb itself, refuelable at the node and reusable."
+    },
+    {
+      "heading": "Re-entry & landing",
+      "flag": true,
+      "body": "Re-enters belly-first at high angle of attack, presenting the flat shielded underside, then transitions to a lifting-body glide and lands dead-stick at ~89 m/s. The belly-flop-to-glide transition is the highest-risk open item: the center of pressure moves through the pitch-down, and stability depends on where the center of mass sits relative to that moving CoP. A coupled trajectory-and-attitude simulation is required to confirm it."
+    }
+  ],
+  "changelog": [
+    {
+      "date": "2026-08-14",
+      "what": "Payload 55→50 t, dry 61→60 t",
+      "why": "Bottom-up dry mass came in at ~61 t (later trimmed to 60); 50 t gives a real ~440 m/s on-orbit reserve instead of near-zero.",
+      "reportId": "r_lx23_retrim"
+    },
+    {
+      "date": "2026-08-14",
+      "what": "Width 14→15 m",
+      "why": "Volume recompute showed 14 m held only ~736 t; 15 m holds ~886 t and closes with reserve.",
+      "reportId": "r_lx23_width"
+    },
+    {
+      "date": "2026-08-14",
+      "what": "Booster twin-TX-24 → 3× TX-04",
+      "why": "Three fleet-common TX-04s (methalox) reach 50 t via asparagus; no bespoke heavy core needed. Fleet flies on one booster.",
+      "reportId": "r_lx23_booster"
+    },
+    {
+      "date": "2026-08-14",
+      "what": "Crew hab volume 120→40 m3",
+      "why": "120 m3 was station-generous (30 m3/person); a basic 4-person hab is ~40 m3. Freed volume went to tank.",
+      "reportId": "r_lx23_volume"
+    }
+  ],
+  "decisions": [
+    {
+      "chose": "Methalox",
+      "over": "Hydrolox",
+      "why": "Volume — hydrolox needs ~1.8× the tank (1,970 vs 1,068 m3). LX-23 is volume-limited."
+    },
+    {
+      "chose": "3× TX-04 (fleet-common)",
+      "over": "Bespoke TX-24 heavy core",
+      "why": "One booster across the whole fleet (EX=1, VX=2, LX=3) is worth more than the ~20 t extra payload a bespoke core would add."
+    },
+    {
+      "chose": "Wingless lifting body",
+      "over": "Winged orbiter",
+      "why": "The hull generates lift AND is the tank; deleting wings drops dry mass and the lift-shape holds propellant instead of being dead mass."
+    },
+    {
+      "chose": "50 t payload",
+      "over": "55 t",
+      "why": "55 t closed with near-zero reserve; 50 t leaves ~440 m/s for real orbital maneuvering and unaided return."
+    }
+  ],
+  "openItems": [
+    "Belly-flop-to-glide transition: CoP travel vs CoG — needs coupled trajectory/attitude sim (highest-risk item).",
+    "Lifting-body L/D across flight regimes — needs CFD.",
+    "Detailed tank-vs-bay volume split (sets true tank fraction of the 1,068 m3).",
+    "Fin sizing and hinge loads.",
+    "Thruster GOX materials, canister pressure on long coasts, ullage settling before in-orbit liquid burns, engine-out authority in ignited landing.",
+    "Shared RCS/OMS/landing duty cycle counted against thruster reuse life."
+  ],
+  "icon": null,
+  "missionSequence": [],
+  "views": {
+    "highFront": null,
+    "lowBack": null
+  }
+}

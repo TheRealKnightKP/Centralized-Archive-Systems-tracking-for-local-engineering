@@ -1,0 +1,162 @@
+{
+  "id": "gx04",
+  "name": "Curiass",
+  "designation": "GX-04 Curiass",
+  "class": "GX",
+  "classQuality": "Ground",
+  "role": "Lunar descent/ascent lander",
+  "status": "concept",
+  "summary": "The fleet’s dedicated lunar lander — a vacuum-only descent/ascent vehicle that the EX-4 ferry hands off to at a lunar-orbit node. Sized for the common 5 t surface-delivery job.",
+  "description": "GX-04 Curiass is the fleet’s dedicated lunar lander — the vehicle the EX-4 Galahad ferry hands off to at a Luna-configuration MX-79 node in lunar orbit. It descends to the surface, performs the mission, and ascends back to the node; the EX-4 never lands. A compact, vacuum-only descent/ascent vehicle that never touches Earth.",
+  "specs": {
+    "type": "Vacuum-only lunar descent/ascent lander, crewed",
+    "dryMass_t": 4.4,
+    "payloadDown_t": 5,
+    "payloadUp": "~0.5 t + crew",
+    "wetAtNode_t": 27,
+    "propellant_t": 17,
+    "propellant": "storable (fleet OMS family)",
+    "totalDeltaV_ms": 3800,
+    "range": "lunar orbit ↔ surface (round trip)",
+    "crew": 2
+  },
+  "components": [
+    {
+      "name": "Elongated octagon body",
+      "what": "Longer than wide; module on each long side",
+      "location": "—",
+      "detail": "Walls slant up/in to a top docking port."
+    },
+    {
+      "name": "4 corner tanks + 4 landing thrusters",
+      "what": "Precise landing control at the widest points",
+      "location": "octagon corners",
+      "detail": "Cylindrical tanks (wider than tall), one thruster atop each — max control moment arm."
+    },
+    {
+      "name": "Central OMS engine",
+      "what": "Large efficient main descent/ascent burns",
+      "location": "bottom center",
+      "detail": ""
+    },
+    {
+      "name": "6 legs",
+      "what": "4 corners + 2 module-side outriggers",
+      "location": "—",
+      "detail": "Outriggers give tip-over stability on the long axis on sloped regolith."
+    },
+    {
+      "name": "Top docking port",
+      "what": "Mating interface + crew exit/entry",
+      "location": "top",
+      "detail": "Front trapezoid window + slit side-windows; rear ladder down."
+    }
+  ],
+  "capabilities": [
+    {
+      "name": "Surface cargo drop (baseline)",
+      "detail": "Deliver a 5 t module to the surface (one EX-3 5 t slot) and return crew + ~0.5 t. ~27 t wet, ~2 tanker runs to fuel."
+    },
+    {
+      "name": "Crew sortie",
+      "detail": "Light down/up ~22 t wet."
+    },
+    {
+      "name": "Heavy drop (max)",
+      "detail": "10 t to surface ~37 t wet — out of the common-job baseline; two trips or a different path."
+    }
+  ],
+  "modules": [
+    {
+      "name": "5 t surface module",
+      "purpose": "Base element / cargo delivered to the Moon",
+      "mass_t": 5
+    }
+  ],
+  "calculations": [
+    {
+      "title": "Common-job sizing (5 t drop)",
+      "method": "Descent (~1,900 m/s w/ cargo) + ascent (~1,900 m/s light), storable Isp ~316.",
+      "result": "Descent prop ~12.5 t, ascent ~4.5 t → ~17 t total; wet at node ~27 t; dry ~4.4 t.",
+      "note": "Sized for the common job to minimise tanker runs, not the 10 t maximum."
+    },
+    {
+      "title": "Correction to old numbers",
+      "method": "Check the old mini-blueprint (dry 4.0 / wet 15.7 / 10 t / 3,800 m/s).",
+      "result": "Those never closed simultaneously — 15.7 t wet gives only ~355 m/s with 10 t aboard. The 10 t was the bay ceiling, not a per-mission requirement.",
+      "note": "Return mass is always small (crew + samples ~0.5–1 t); delivered-down mass sizes the vehicle."
+    }
+  ],
+  "blueprint": {
+    "frame": "Elongated octagon planform (longer than wide); EX-sized module on each long side.",
+    "stations": "4 corner tanks + thrusters; central OMS bottom-center; 6 legs (4 corner + 2 outrigger); top docking port; front window; rear ladder.",
+    "notes": "Parks cold on the surface — storable propellant, no boiloff."
+  },
+  "comparisons": [
+    {
+      "against": "EX-4 Galahad",
+      "type": "fleet",
+      "rows": [
+        {
+          "label": "Role",
+          "this": "Lands on the Moon",
+          "other": "Ferries to lunar orbit only"
+        },
+        {
+          "label": "Wet",
+          "this": "~27 t",
+          "other": "—"
+        },
+        {
+          "label": "Propellant",
+          "this": "Storable",
+          "other": "Storable"
+        }
+      ]
+    }
+  ],
+  "sections": [
+    {
+      "heading": "Fleet fit",
+      "flag": false,
+      "body": "EX-4 ferries crew and modules Earth–LEO–lunar orbit; the Curiass takes them the last leg to the surface and back. Both run storable propellant fuelled at the same node, so the logistics chain is single-supply."
+    }
+  ],
+  "changelog": [
+    {
+      "date": "2026-08-13",
+      "what": "Promoted from EX-4 mini-blueprint to own vehicle sheet; sized for 5 t common job",
+      "why": "Old placeholder numbers never closed; the common-job sizing is honest and minimises tanker runs.",
+      "reportId": "r_gx04_promote"
+    },
+    {
+      "date": "2026-08-13",
+      "what": "1 descent engine → 4 corner thrusters + central OMS",
+      "why": "Precise landing control; adds only ~300–450 kg dry, still closes.",
+      "reportId": "r_gx04_engines"
+    }
+  ],
+  "decisions": [
+    {
+      "chose": "Common-job sizing (5 t drop)",
+      "over": "Max-capable (10 t drop)",
+      "why": "Fewer tanker runs per mission; the rare 10 t monolith is a two-trip job."
+    },
+    {
+      "chose": "Storable propellant",
+      "over": "Methalox",
+      "why": "Parks cold on the lunar surface between missions — no cryogenic boiloff."
+    }
+  ],
+  "openItems": [
+    "Leg/regolith bearing sizing.",
+    "CoM shift when the 5 t cargo releases on the surface (affects ascent trim).",
+    "4-thruster + OMS throttle authority during descent."
+  ],
+  "icon": null,
+  "missionSequence": [],
+  "views": {
+    "highFront": null,
+    "lowBack": null
+  }
+}

@@ -1,0 +1,185 @@
+{
+  "id": "ex3",
+  "name": "Percival",
+  "designation": "EX-3 Percival",
+  "class": "EX",
+  "classQuality": "Efficient",
+  "role": "Reusable orbital glide-return orbiter",
+  "status": "concept",
+  "summary": "The core orbital workhorse: a reusable glide-return orbiter delivering 10 t to LEO at roughly $297/kg, then gliding home for reuse.",
+  "description": "EX-3 Percival is the core orbital workhorse: a reusable, glide-return orbiter delivering 10,000 kg to low Earth orbit and landing for reuse. It rides the TX-04 Pauldron off the pad, delivers its payload, deorbits, re-enters belly-first behind non-ablative armour, and glides to a runway or soft-pad. Headline result: 10 t to LEO at roughly $3.0M per mission ($297/kg at 1,000-flight reuse life).",
+  "specs": {
+    "type": "Reusable glide-return orbiter (upper stage)",
+    "payload_t": 10,
+    "dryMass_t": 26.3,
+    "wetMass_t": 158.2,
+    "upperStageDeltaV_ms": 5200,
+    "propellant": "methalox (ZBO-held for loiter)",
+    "booster": "1× TX-04 Pauldron",
+    "stackClose": "~9,750 m/s vs ~9,400 required",
+    "range": "LEO and return",
+    "costPerMission_M": 3,
+    "costPerKg": 297,
+    "modules": "2×5 t slots or 1×10 t mono"
+  },
+  "components": [
+    {
+      "name": "3-engine methalox cluster",
+      "what": "Upper-stage propulsion",
+      "location": "aft (nozzle plane datum)",
+      "detail": "Isp ~360 s; upper-stage Δv 5,200 m/s."
+    },
+    {
+      "name": "IDSS dock + airlock/shelter",
+      "what": "Docking and crew shelter",
+      "location": "forward",
+      "detail": "Resolved at v6.6."
+    },
+    {
+      "name": "Rotating-nozzle TVC (F-35B-style)",
+      "what": "3-bearing rotating nozzle thrust vectoring",
+      "location": "engine cluster",
+      "detail": "Hard part is the cryo/GOX rotary seal, not the kinematics."
+    },
+    {
+      "name": "Non-ablative armour",
+      "what": "Re-entry thermal protection",
+      "location": "belly",
+      "detail": "Belly-first re-entry, then glide to runway/soft-pad."
+    },
+    {
+      "name": "X-fins / wet strake",
+      "what": "Control surfaces",
+      "location": "aft",
+      "detail": "Fin scheme shared across the orbiter fleet."
+    }
+  ],
+  "capabilities": [
+    {
+      "name": "Orbital delivery",
+      "detail": "Deliver 10 t to LEO, deploy payload or a module, loiter on ZBO-held methalox, deorbit, glide home."
+    },
+    {
+      "name": "Depot feeder",
+      "detail": "Feeds the orbital depot; carries EX-4’s propellant and krypton, station parts, satellites, deployers."
+    }
+  ],
+  "modules": [
+    {
+      "name": "10 t mono",
+      "purpose": "Single heavy payload",
+      "mass_t": 10
+    },
+    {
+      "name": "2×5 t slots",
+      "purpose": "Split payloads, station parts, propellant for EX-4",
+      "mass_t": 5
+    }
+  ],
+  "calculations": [
+    {
+      "title": "Mass build-up",
+      "method": "Bottom-up dry + propellant.",
+      "result": "Dry 26,273 kg (17% of wet); wet 158,223 kg.",
+      "note": "Upper-stage Δv 5,200 m/s at Isp 360."
+    },
+    {
+      "title": "Stack closure",
+      "method": "Booster (TX-04) + orbiter Δv vs required to LEO.",
+      "result": "~9,750 m/s achieved vs ~9,400 required.",
+      "note": "Closes with margin."
+    },
+    {
+      "title": "Cost per kg",
+      "method": "All-in mission cost / payload at design reuse life.",
+      "result": "~$3.0M / 10 t = ~$297/kg at 1,000-flight life.",
+      "note": "Dominant consumable is the Pauldron’s propellant."
+    }
+  ],
+  "blueprint": {
+    "frame": "Y=0 at engine nozzle plane, +Y toward nose; X=0 centerline. Nose-datum geometry from v6.6.",
+    "stations": "3-engine cluster aft; payload bay mid; IDSS dock + airlock forward.",
+    "notes": "Shares fin logic with EX-4 and the Pauldron."
+  },
+  "comparisons": [
+    {
+      "against": "Starship",
+      "type": "external",
+      "rows": [
+        {
+          "label": "Payload",
+          "this": "10 t dedicated",
+          "other": "100–200 t bulk"
+        },
+        {
+          "label": "Niche",
+          "this": "Dedicated small-payload",
+          "other": "Bulk mass"
+        },
+        {
+          "label": "Cost/kg",
+          "this": "~$297",
+          "other": "target low but bulk-only"
+        }
+      ]
+    },
+    {
+      "against": "LX-23",
+      "type": "fleet",
+      "rows": [
+        {
+          "label": "Payload",
+          "this": "10 t",
+          "other": "50 t"
+        },
+        {
+          "label": "Cost/kg",
+          "this": "~$297",
+          "other": "~$371"
+        },
+        {
+          "label": "Role",
+          "this": "Cheap workhorse",
+          "other": "Heavy flagship / station"
+        }
+      ]
+    }
+  ],
+  "sections": [
+    {
+      "heading": "Mission",
+      "flag": false,
+      "body": "Deliver 10 t to LEO, deploy payload or a module, loiter if needed on ZBO-held methalox, deorbit, re-enter belly-first, and glide home for reuse. The cheapest crewed-capable payload vehicle in the fleet."
+    },
+    {
+      "heading": "Fleet role",
+      "flag": false,
+      "body": "The orbital workhorse and the vehicle that wins early contracts and investor reputation. EX-3 feeds the orbital depot; EX-4 (its re-fitted frame) ferries crew to lunar orbit."
+    }
+  ],
+  "changelog": [
+    {
+      "date": "2026",
+      "what": "v6.6: 3-engine cluster + IDSS dock + airlock/shelter + wet-strake resolved",
+      "why": "Converged orbiter configuration.",
+      "reportId": "r_ex3_v66"
+    }
+  ],
+  "decisions": [
+    {
+      "chose": "Glide-return reuse",
+      "over": "Expendable / propulsive landing",
+      "why": "Runway/soft-pad glide with non-ablative armour for high reuse life and low cost/kg."
+    }
+  ],
+  "openItems": [
+    "Cryo/GOX rotary seal for the rotating-nozzle TVC.",
+    "Full re-entry trajectory + attitude sim."
+  ],
+  "icon": null,
+  "missionSequence": [],
+  "views": {
+    "highFront": null,
+    "lowBack": null
+  }
+}
