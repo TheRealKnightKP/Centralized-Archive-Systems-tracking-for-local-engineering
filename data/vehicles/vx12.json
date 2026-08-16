@@ -1,0 +1,42 @@
+{
+  "id": "vx12",
+  "name": "Andrew",
+  "designation": "VX-12 Andrew",
+  "class": "VX",
+  "classQuality": "Versatile",
+  "role": "Dual-Bay Cargo Courier",
+  "status": "teased",
+  "summary": "Carries two independent belly module bays simultaneously. A public university project.",
+  "description": "VX-12 Andrew is a dual-bay cargo courier — it carries two independent belly module bays at once. Listed as a public university project. Roster-level entry only.",
+  "specs": {
+    "note": "Not yet worked — roster-level entry only."
+  },
+  "components": [],
+  "capabilities": [],
+  "modules": [],
+  "calculations": [],
+  "blueprint": {
+    "frame": "N/A",
+    "stations": "N/A",
+    "notes": "N/A"
+  },
+  "comparisons": [],
+  "sections": [
+    {
+      "heading": "Roster note",
+      "flag": true,
+      "body": "Public university project. Pre-preliminary. Dual independent belly bays is the defining feature; no worked specs yet."
+    }
+  ],
+  "changelog": [],
+  "decisions": [],
+  "openItems": [
+    "Full sizing pass — this vehicle exists only as a fleet-roster entry so far."
+  ],
+  "icon": null,
+  "missionSequence": [],
+  "views": {
+    "highFront": null,
+    "lowBack": null
+  }
+}

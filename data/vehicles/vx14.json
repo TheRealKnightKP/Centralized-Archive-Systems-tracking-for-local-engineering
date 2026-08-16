@@ -1,0 +1,43 @@
+{
+  "id": "vx14",
+  "name": "Anthony",
+  "designation": "VX-14 Anthony",
+  "class": "VX",
+  "classQuality": "Versatile",
+  "role": "Lunar Outpost Builder",
+  "status": "teased",
+  "summary": "4 crew, extended stay, full interior — builds lunar outposts. Pre-preliminary, protected.",
+  "description": "VX-14 Anthony is the lunar outpost builder: 4 crew, extended stay, full interior. Pre-preliminary and protected. Roster-level entry only.",
+  "specs": {
+    "crew": "4",
+    "note": "Extended stay, full interior. Otherwise not yet worked."
+  },
+  "components": [],
+  "capabilities": [],
+  "modules": [],
+  "calculations": [],
+  "blueprint": {
+    "frame": "N/A",
+    "stations": "N/A",
+    "notes": "N/A"
+  },
+  "comparisons": [],
+  "sections": [
+    {
+      "heading": "Roster note",
+      "flag": true,
+      "body": "Pre-preliminary, protected. 4 crew, extended-stay, full-interior outpost builder; no worked specs yet."
+    }
+  ],
+  "changelog": [],
+  "decisions": [],
+  "openItems": [
+    "Full sizing pass — this vehicle exists only as a fleet-roster entry so far."
+  ],
+  "icon": null,
+  "missionSequence": [],
+  "views": {
+    "highFront": null,
+    "lowBack": null
+  }
+}

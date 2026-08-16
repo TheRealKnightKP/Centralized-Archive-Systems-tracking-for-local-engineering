@@ -1,0 +1,47 @@
+{
+  "id": "tx03",
+  "name": "Modular",
+  "designation": "TX-03 Modular",
+  "class": "TX",
+  "classQuality": "Tools",
+  "role": "Transportable Assembly Crane",
+  "status": "teased",
+  "summary": "A fully disassemblable crane that mates orbiter to booster anywhere — it moves with the fleet, not the pad.",
+  "description": "TX-03 Modular is a transportable, fully disassemblable assembly crane that mates orbiter to booster. It travels with the fleet (carried by LX-22 or MX vehicles) so stacks can be built at any base rather than a fixed launch complex. Roster-level entry only.",
+  "specs": {
+    "note": "Not yet worked — roster-level entry only."
+  },
+  "components": [],
+  "capabilities": [
+    {
+      "name": "Assemble anywhere",
+      "detail": "Mates orbiter to booster at any flat surface; disassembles for transport by LX-22 Turpin or MX vehicles."
+    }
+  ],
+  "modules": [],
+  "calculations": [],
+  "blueprint": {
+    "frame": "N/A",
+    "stations": "N/A",
+    "notes": "N/A"
+  },
+  "comparisons": [],
+  "sections": [
+    {
+      "heading": "Roster note",
+      "flag": true,
+      "body": "Transportable, fully disassemblable crane. Rides LX-22 or MX vehicles. No worked specs yet."
+    }
+  ],
+  "changelog": [],
+  "decisions": [],
+  "openItems": [
+    "Full sizing pass — this vehicle exists only as a fleet-roster entry so far."
+  ],
+  "icon": null,
+  "missionSequence": [],
+  "views": {
+    "highFront": null,
+    "lowBack": null
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "id": "vx11",
+  "name": "George",
+  "designation": "VX-11 George",
+  "class": "VX",
+  "classQuality": "Versatile",
+  "role": "Mobile Stabilization Clinic + Scout",
+  "status": "teased",
+  "summary": "Second responder to the EX-1 medic: arrives after the first responder and treats patients on-site. A public university project.",
+  "description": "VX-11 George is the second responder to the EX-1 Lancelot: it arrives after the medic and treats patients — a mobile stabilization clinic and scout. Listed in the fleet as a public university project. Only a roster-level entry so far.",
+  "specs": {
+    "note": "Not yet worked — roster-level entry only."
+  },
+  "components": [],
+  "capabilities": [],
+  "modules": [],
+  "calculations": [],
+  "blueprint": {
+    "frame": "N/A",
+    "stations": "N/A",
+    "notes": "N/A"
+  },
+  "comparisons": [],
+  "sections": [
+    {
+      "heading": "Roster note",
+      "flag": true,
+      "body": "Public university project. Pre-preliminary. No worked specs yet — role and class only."
+    }
+  ],
+  "changelog": [],
+  "decisions": [],
+  "openItems": [
+    "Full sizing pass — this vehicle exists only as a fleet-roster entry so far."
+  ],
+  "icon": null,
+  "missionSequence": [],
+  "views": {
+    "highFront": null,
+    "lowBack": null
+  }
+}

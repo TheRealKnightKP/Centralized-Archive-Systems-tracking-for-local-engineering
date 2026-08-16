@@ -1,0 +1,47 @@
+{
+  "id": "lx22",
+  "name": "Turpin",
+  "designation": "LX-22 Turpin",
+  "class": "LX",
+  "classQuality": "Large-scale",
+  "role": "Fleet Logistics Powerhouse",
+  "status": "teased",
+  "summary": "The fleet enabler: carries the TX-03 crane and folded Pauldron stages to mate stacks anywhere, no fixed pad.",
+  "description": "LX-22 Turpin is the fleet logistics powerhouse — it carries the TX-03 assembly crane and folded Pauldron stages, letting the fleet mate stacks anywhere rather than at a fixed pad. The enabler that makes “any flat surface is a launch site” real. Roster-level entry only.",
+  "specs": {
+    "note": "Not yet worked — roster-level entry only."
+  },
+  "components": [],
+  "capabilities": [
+    {
+      "name": "Fleet enabler",
+      "detail": "Transports the TX-03 crane and folded Pauldron stages so orbiter+booster stacks can be assembled at any base, not a fixed launch complex."
+    }
+  ],
+  "modules": [],
+  "calculations": [],
+  "blueprint": {
+    "frame": "N/A",
+    "stations": "N/A",
+    "notes": "N/A"
+  },
+  "comparisons": [],
+  "sections": [
+    {
+      "heading": "Roster note",
+      "flag": true,
+      "body": "Carries TX-03 crane + folded Pauldron stages. Defining role is fleet logistics/assembly-anywhere; no worked specs yet."
+    }
+  ],
+  "changelog": [],
+  "decisions": [],
+  "openItems": [
+    "Full sizing pass — this vehicle exists only as a fleet-roster entry so far."
+  ],
+  "icon": null,
+  "missionSequence": [],
+  "views": {
+    "highFront": null,
+    "lowBack": null
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "id": "mx74",
+  "name": "(VX-scale)",
+  "designation": "MX-74",
+  "class": "MX",
+  "classQuality": "Modular Expeditionary",
+  "role": "Full-Vehicle Modularity (VX scale)",
+  "status": "teased",
+  "summary": "Full-vehicle modularity at VX scale.",
+  "description": "MX-74 is the VX-scale entry in the Modular Expeditionary series — whole-vehicle modularity (wings, VTOL, engines, structure) at VX scale. Roster-level entry only.",
+  "specs": {
+    "note": "Not yet worked — roster-level entry only."
+  },
+  "components": [],
+  "capabilities": [],
+  "modules": [],
+  "calculations": [],
+  "blueprint": {
+    "frame": "N/A",
+    "stations": "N/A",
+    "notes": "N/A"
+  },
+  "comparisons": [],
+  "sections": [
+    {
+      "heading": "Roster note",
+      "flag": true,
+      "body": "Full-vehicle modularity at VX scale. Concept only."
+    }
+  ],
+  "changelog": [],
+  "decisions": [],
+  "openItems": [
+    "Full sizing pass — this vehicle exists only as a fleet-roster entry so far."
+  ],
+  "icon": null,
+  "missionSequence": [],
+  "views": {
+    "highFront": null,
+    "lowBack": null
+  }
+}

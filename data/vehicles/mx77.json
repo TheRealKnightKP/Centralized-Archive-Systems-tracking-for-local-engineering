@@ -1,0 +1,42 @@
+{
+  "id": "mx77",
+  "name": "(LX-scale)",
+  "designation": "MX-77",
+  "class": "MX",
+  "classQuality": "Modular Expeditionary",
+  "role": "Full-Vehicle Modularity (LX scale)",
+  "status": "teased",
+  "summary": "Full-vehicle modularity at LX scale.",
+  "description": "MX-77 is the LX-scale entry in the Modular Expeditionary series — whole-vehicle modularity at LX scale. Roster-level entry only.",
+  "specs": {
+    "note": "Not yet worked — roster-level entry only."
+  },
+  "components": [],
+  "capabilities": [],
+  "modules": [],
+  "calculations": [],
+  "blueprint": {
+    "frame": "N/A",
+    "stations": "N/A",
+    "notes": "N/A"
+  },
+  "comparisons": [],
+  "sections": [
+    {
+      "heading": "Roster note",
+      "flag": true,
+      "body": "Full-vehicle modularity at LX scale. Concept only."
+    }
+  ],
+  "changelog": [],
+  "decisions": [],
+  "openItems": [
+    "Full sizing pass — this vehicle exists only as a fleet-roster entry so far."
+  ],
+  "icon": null,
+  "missionSequence": [],
+  "views": {
+    "highFront": null,
+    "lowBack": null
+  }
+}

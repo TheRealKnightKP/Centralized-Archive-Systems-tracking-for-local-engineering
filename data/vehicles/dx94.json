@@ -1,0 +1,43 @@
+{
+  "id": "dx94",
+  "name": "Alexander",
+  "designation": "DX-94 Alexander",
+  "class": "DX",
+  "classQuality": "Heavy atmospheric / hub",
+  "role": "Deep-Space Vessel",
+  "status": "teased",
+  "summary": "Never lands. Assembled in orbit at DX-93. Carries EX-4s / VX-14s on ion propulsion — the deep-space mothership.",
+  "description": "DX-94 Alexander is the deep-space vessel: it never lands, is assembled in orbit at DX-93, and carries EX-4s and VX-14s using ion propulsion. The culmination of the deep-space branch of the fleet. Roster-level entry only.",
+  "specs": {
+    "propulsion": "Ion",
+    "note": "Never lands; orbit-assembled at DX-93; carries EX-4 / VX-14. Otherwise not yet worked."
+  },
+  "components": [],
+  "capabilities": [],
+  "modules": [],
+  "calculations": [],
+  "blueprint": {
+    "frame": "N/A",
+    "stations": "N/A",
+    "notes": "N/A"
+  },
+  "comparisons": [],
+  "sections": [
+    {
+      "heading": "Roster note",
+      "flag": true,
+      "body": "Deep-space mothership — never lands, ion propulsion, carries EX-4s/VX-14s, assembled at DX-93. No worked specs yet."
+    }
+  ],
+  "changelog": [],
+  "decisions": [],
+  "openItems": [
+    "Full sizing pass — this vehicle exists only as a fleet-roster entry so far."
+  ],
+  "icon": null,
+  "missionSequence": [],
+  "views": {
+    "highFront": null,
+    "lowBack": null
+  }
+}

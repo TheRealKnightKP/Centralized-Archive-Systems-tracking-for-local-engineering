@@ -1,0 +1,47 @@
+{
+  "id": "mx79",
+  "name": "(Station Kit)",
+  "designation": "MX-79",
+  "class": "MX",
+  "classQuality": "Modular Expeditionary",
+  "role": "Modular Orbital Station Kit / Node",
+  "status": "teased",
+  "summary": "A bare structural frame with snap-in modules (habitats, fuel tanks). Assembled from EX-3 flights; the orbital and lunar refuelling node the fleet is built around.",
+  "description": "MX-79 is the modular orbital station kit: a bare structural frame with snap-in modules — habitats, fuel tanks, and more — assembled from EX-3 flights. MX-79 Alpha is the LEO depot and crew node; a Luna configuration is the lunar-orbit transfer node where the EX-4 hands off to the GX-04 lander. It is the refuelling node the whole orbital architecture depends on. Bridge between the MX and DX series and precursor to DX-93.",
+  "specs": {
+    "note": "Not yet worked — roster-level entry only."
+  },
+  "components": [],
+  "capabilities": [
+    {
+      "name": "Orbital node / depot",
+      "detail": "LEO depot and crew node (MX-79 Alpha); Luna configuration is the lunar-orbit transfer/refuel node. Where the LX-23 and EX-4 refuel and where crews/landers exchange."
+    }
+  ],
+  "modules": [],
+  "calculations": [],
+  "blueprint": {
+    "frame": "N/A",
+    "stations": "N/A",
+    "notes": "N/A"
+  },
+  "comparisons": [],
+  "sections": [
+    {
+      "heading": "Roster note",
+      "flag": true,
+      "body": "Bare frame + snap-in modules, assembled by EX-3 flights. Momentum-exchange tether candidate. The node the fleet refuels at; no worked structural specs yet."
+    }
+  ],
+  "changelog": [],
+  "decisions": [],
+  "openItems": [
+    "Full sizing pass — this vehicle exists only as a fleet-roster entry so far."
+  ],
+  "icon": null,
+  "missionSequence": [],
+  "views": {
+    "highFront": null,
+    "lowBack": null
+  }
+}

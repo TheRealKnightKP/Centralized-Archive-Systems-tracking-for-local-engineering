@@ -1,0 +1,42 @@
+{
+  "id": "lx21",
+  "name": "Roland",
+  "designation": "LX-21 Roland",
+  "class": "LX",
+  "classQuality": "Large-scale",
+  "role": "Mobile Hospital / Remote Base",
+  "status": "teased",
+  "summary": "A full surgical hospital or autonomous remote outpost, delivered anywhere.",
+  "description": "LX-21 Roland delivers a full surgical hospital or an autonomous remote outpost anywhere it is needed. Roster-level entry only — no worked specs yet.",
+  "specs": {
+    "note": "Not yet worked — roster-level entry only."
+  },
+  "components": [],
+  "capabilities": [],
+  "modules": [],
+  "calculations": [],
+  "blueprint": {
+    "frame": "N/A",
+    "stations": "N/A",
+    "notes": "N/A"
+  },
+  "comparisons": [],
+  "sections": [
+    {
+      "heading": "Roster note",
+      "flag": true,
+      "body": "Full surgical hospital OR autonomous remote base delivered anywhere. Role only; no sizing yet."
+    }
+  ],
+  "changelog": [],
+  "decisions": [],
+  "openItems": [
+    "Full sizing pass — this vehicle exists only as a fleet-roster entry so far."
+  ],
+  "icon": null,
+  "missionSequence": [],
+  "views": {
+    "highFront": null,
+    "lowBack": null
+  }
+}

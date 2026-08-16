@@ -1,0 +1,42 @@
+{
+  "id": "dx91",
+  "name": "Godfrey",
+  "designation": "DX-91 Godfrey",
+  "class": "DX",
+  "classQuality": "Heavy atmospheric / hub",
+  "role": "Earth Facilities Hub",
+  "status": "teased",
+  "summary": "The complete ground-ops hub: hangars, cranes, pads, offices, maintenance. Any flat surface in its range is a launch site.",
+  "description": "DX-91 Godfrey is the Earth facilities hub — hangars, cranes, pads, offices, and maintenance in one complex. Combined with the fleet’s glide-return orbiters and transportable crane, it means no fixed launch complex is needed: any flat surface in range of the hub is a launch site. Roster-level entry only.",
+  "specs": {
+    "note": "Not yet worked — roster-level entry only."
+  },
+  "components": [],
+  "capabilities": [],
+  "modules": [],
+  "calculations": [],
+  "blueprint": {
+    "frame": "N/A",
+    "stations": "N/A",
+    "notes": "N/A"
+  },
+  "comparisons": [],
+  "sections": [
+    {
+      "heading": "Roster note",
+      "flag": true,
+      "body": "Complete ground-ops hub (hangars, cranes, pads, offices, maintenance). Facility, not a flight vehicle. No worked specs yet."
+    }
+  ],
+  "changelog": [],
+  "decisions": [],
+  "openItems": [
+    "Full sizing pass — this vehicle exists only as a fleet-roster entry so far."
+  ],
+  "icon": null,
+  "missionSequence": [],
+  "views": {
+    "highFront": null,
+    "lowBack": null
+  }
+}

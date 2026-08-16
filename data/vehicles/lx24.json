@@ -1,0 +1,47 @@
+{
+  "id": "lx24",
+  "name": "Renaud",
+  "designation": "LX-24 Renaud",
+  "class": "LX",
+  "classQuality": "Large-scale",
+  "role": "Lunar Long-Stay Base (potential Mars)",
+  "status": "teased",
+  "summary": "Dual module bays, semi-permanent lunar surface base, potential Mars application. The vacuum-focused, deep-space-capable sibling of the LX-23.",
+  "description": "LX-24 Renaud is the lunar long-stay base: dual module bays, a semi-permanent lunar surface base, with potential Mars application. Conceptually it is the vacuum-focused, deep-space-outfitted sibling of the LX-23 — the LX-23 has the propulsion legs (a fully-fuelled LX-23 is a “pseudo LX-24”) but lacks the long-duration life support and shielding the LX-24 is meant to carry. Roster-level entry plus this session’s thought experiment.",
+  "specs": {
+    "note": "Dual module bays, semi-permanent lunar base. Deep-space facilities (long-duration ECLSS, radiation shielding, crew provisions) are the point of difference vs LX-23. Not yet worked."
+  },
+  "components": [],
+  "capabilities": [],
+  "modules": [],
+  "calculations": [],
+  "blueprint": {
+    "frame": "N/A",
+    "stations": "N/A",
+    "notes": "N/A"
+  },
+  "comparisons": [],
+  "sections": [
+    {
+      "heading": "Relationship to the LX-23",
+      "flag": false,
+      "body": "A fully-fuelled LX-23 has the propulsion to reach Mars orbit and even return (full-tank vacuum Δv ~7,780 m/s with 50 t), but lacks the 6–9 month transit life support and shielding. The LX-24 is the vehicle actually built for that — same airframe lineage, outfitted for the journey rather than improvised into it."
+    },
+    {
+      "heading": "Roster note",
+      "flag": true,
+      "body": "Dual bays, semi-permanent lunar base, potential Mars. Deep-space outfitting is the concept; no worked specs yet."
+    }
+  ],
+  "changelog": [],
+  "decisions": [],
+  "openItems": [
+    "Full sizing pass — this vehicle exists only as a fleet-roster entry so far."
+  ],
+  "icon": null,
+  "missionSequence": [],
+  "views": {
+    "highFront": null,
+    "lowBack": null
+  }
+}
