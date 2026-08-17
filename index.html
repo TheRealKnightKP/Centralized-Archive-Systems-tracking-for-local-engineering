@@ -158,10 +158,10 @@
 
   /* ---- flying Pauldron loader ---- */
   .loader{ display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 0; }
-  .flypath{ position:relative; width:100%; max-width:520px; height:70px; overflow:hidden; }
-  .pauldron{ position:absolute; top:20px; left:-40px; animation:fly 1.5s linear infinite; }
-  @keyframes fly{ from{ transform:translateX(0); } to{ transform:translateX(calc(100vw + 80px)); } }
-  .ptrail{ position:absolute; top:34px; height:4px; width:60px; border-radius:2px;
+  .flypath{ position:relative; width:100%; max-width:520px; height:70px; overflow:hidden; margin:0 auto; }
+  .pauldron{ position:absolute; top:16px; left:0; animation:fly 1.5s linear infinite; }
+  @keyframes fly{ from{ transform:translateX(-44px); } to{ transform:translateX(540px); } }
+  .ptrail{ position:absolute; top:30px; left:-60px; height:5px; width:60px; border-radius:2px;
     background:linear-gradient(90deg, transparent, rgba(227,154,28,.7)); animation:fly 1.5s linear infinite; }
   .loadtxt{ font-family:var(--mono); font-size:11px; color:var(--dim); margin-top:14px; letter-spacing:1px; }
 
@@ -211,7 +211,7 @@
   // Flying-Pauldron loader (Franco's reference: trapezoid nose, blue 3-section body, grey base module, 2 triangle fins, 3 engine trapezoids)
   function pauldronSVG(){
     return '<svg width="34" height="60" viewBox="0 0 34 60">'
-      +'<polygon points="10,2 24,2 21,10 13,10" fill="#8a97a6" stroke="#0a1119" stroke-width="1.5"/>'
+      +'<polygon points="13,2 21,2 24,10 10,10" fill="#8a97a6" stroke="#0a1119" stroke-width="1.5"/>'
       +'<rect x="11" y="10" width="12" height="12" fill="#3a4a63" stroke="#0a1119" stroke-width="1.5"/>'
       +'<rect x="11" y="22" width="12" height="12" fill="#3a4a63" stroke="#0a1119" stroke-width="1.5"/>'
       +'<rect x="11" y="34" width="12" height="12" fill="#3a4a63" stroke="#0a1119" stroke-width="1.5"/>'
@@ -223,7 +223,9 @@
       +'<polygon points="20,52 22,58 20,58" fill="#2a3444" stroke="#0a1119" stroke-width="1"/>'
       +'</svg>';
   }
-  function loader(msg){ return '<div class="loader"><div class="flypath"><span class="ptrail"></span><span class="pauldron" style="transform:rotate(90deg)">'+pauldronSVG()+'</span></div><div class="loadtxt">'+esc(msg||'LOADING')+'</div></div>'; }
+  function loader(msg){ return '<div class="loader"><div class="flypath"><span class="ptrail"></span><span class="pauldron"><span style="display:inline-block;transform:rotate(90deg)">'+pauldronSVG()+'</span></span></div><div class="loadtxt">'+esc(msg||'LOADING')+'</div></div>'; }
+  // Guarantee the Pauldron flies at least one full pass (1.5s) before content shows.
+  function minLoad(msg, work){ paint(loader(msg),false); var t0=Date.now(); return Promise.resolve().then(work).then(function(r){ var wait=Math.max(0,1500-(Date.now()-t0)); return new Promise(function(res){ setTimeout(function(){ res(r); },wait); }); }); }
 
   // class → accent color for station strips / stamps
   var CLASS_COLOR={ EX:'#4fd08a', VX:'#57b6e6', LX:'#E39A1C', TX:'#c98a5a', GX:'#b57de0', DX:'#e0687d', MX:'#7de0c8', RX:'#e0d267' };
@@ -268,7 +270,7 @@
     if(tab==='data') return renderData();
   }catch(e){ fail('Error rendering "'+tab+'": '+(e&&e.message?e.message:e)); } }
 
- /* ---------- station strip from blueprint (rough, decorative-but-real) ---------- */
+  /* ---------- station strip from blueprint (rough, decorative-but-real) ---------- */
   function stationStrip(d){
     var segs=[]; var base=cc(d.class);
     var n = d._components || (d.data&&d.data.components&&d.data.components.length) || (d.components&&d.components.length) || 5;
@@ -287,8 +289,8 @@
       list.forEach(function(x){ (byClass[x.class]=byClass[x.class]||[]).push(x); });
       var h='<p class="eyebrow">KnightShip Aerospace · Fleet Registry</p>';
       h+='<h1>'+esc(ix.castle.company)+'</h1><p class="dim small">'+esc(ix.castle.motto)+'</p>';
-      var order=['EX','VX','LX','GX','TX','MX','DX','RX'];
-      var classes=Object.keys(byClass).sort(function(a,b){ return (order.indexOf(a)+99)%100-(order.indexOf(b)+99)%100; });
+      var order=['EX','VX','LX','TX','GX','MX','DX','RX'];
+      var classes=Object.keys(byClass).sort(function(a,b){ var ia=order.indexOf(a), ib=order.indexOf(b); if(ia<0)ia=99; if(ib<0)ib=99; return ia-ib; });
       classes.forEach(function(cls){
         var q=(ix.taxonomy.classes.filter(function(c){return c.code===cls[0];})[0]||{}).name||'';
         h+='<h2>'+esc(cls)+' — '+esc(q)+'</h2>';
@@ -308,16 +310,16 @@
       paint(h,true);
       Array.prototype.forEach.call(view().querySelectorAll('.plate-card'),function(c){ c.onclick=function(){ route('fleet',c.dataset.id); }; });
     };
-    if(state.fleetList) return draw(state.fleetList);
-    if(!sb) return draw(state.index.vehicles); // fallback to repo index list
-    paint(loader('RETRIEVING FLEET'),false);
-    sb.from('vehicles').select('id,designation,class,class_quality,role,status,data').order('sort',{ascending:true}).then(function(res){
-      if(res.error||!res.data||!res.data.length) return draw(state.index.vehicles);
-      var list=res.data.map(function(r){ r.classQuality=r.class_quality; return r; });
-      // cache component counts for station strips
-      list.forEach(function(r){ state.vehicles[r.id]=state.vehicles[r.id]||{}; if(r.data) state.vehicles[r.id]._components=(r.data.components||[]).length; });
-      draw(list);
-    });
+    if(state.fleetList) return minLoad('RETRIEVING FLEET',function(){ return state.fleetList; }).then(draw);
+    if(!sb) return minLoad('RETRIEVING FLEET',function(){ return state.index.vehicles; }).then(draw);
+    minLoad('RETRIEVING FLEET',function(){
+      return sb.from('vehicles').select('id,designation,class,class_quality,role,status,data').order('sort',{ascending:true}).then(function(res){
+        if(res.error||!res.data||!res.data.length) return state.index.vehicles;
+        var list=res.data.map(function(r){ r.classQuality=r.class_quality; return r; });
+        list.forEach(function(r){ state.vehicles[r.id]=state.vehicles[r.id]||{}; if(r.data) state.vehicles[r.id]._components=(r.data.components||[]).length; });
+        return list;
+      });
+    }).then(draw);
   }
 
   /* ---------- VEHICLE ---------- */
