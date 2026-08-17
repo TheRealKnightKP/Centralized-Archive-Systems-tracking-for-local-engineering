@@ -3,316 +3,412 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#1A3A5C">
-<title>CASTLE — KnightShip Archive</title>
+<meta name="theme-color" content="#0d141b">
+<title>CASTLE — KnightShip Registry</title>
 <link rel="manifest" href="manifest.json">
 <style>
-  :root{ --navy:#1A3A5C; --orange:#C2820A; --grey:#55606E; --bg:#10161d; --panel:#18222d; --panel2:#1f2b38; --line:#2b3947; --text:#e7edf3; --dim:#9fb0c0; }
+  /* ============================================================
+     CASTLE v4 — "The Keep's Technical Registry"
+     Aerospace type-certificate aesthetic. Monospace data,
+     station diagrams, revision blocks, caution flags, blueprint
+     draw-on. KnightShip navy/orange kept, refined into tokens.
+     ============================================================ */
+  :root{
+    --navy:#1A3A5C; --navy-lo:#12293f; --navy-hi:#28527d;
+    --orange:#E39A1C; --orange-lo:#C2820A; --orange-dim:#8a6a2e;
+    --ink:#0a1219; --bg:#0b1219; --panel:#111c26; --panel-2:#16232f;
+    --line:#233343; --line-hi:#33485c;
+    --text:#e9eff5; --dim:#8ea3b6; --dimmer:#5f7488;
+    --good:#4fd08a; --grid:rgba(46,74,102,.16);
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Roboto Mono",monospace;
+    --disp:"Eurostile","Bahnschrift","DIN Alternate",-apple-system,BlinkMacSystemFont,sans-serif;
+    --body:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  }
   *{ box-sizing:border-box; }
-  body{ margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); -webkit-text-size-adjust:100%; }
-  header{ background:var(--navy); padding:14px 16px; display:flex; align-items:center; gap:10px; position:sticky; top:0; z-index:10; }
-  header b{ font-size:20px; letter-spacing:1px; }
-  header span{ color:#a9c4dd; font-size:11px; }
-  nav{ display:flex; gap:4px; overflow-x:auto; background:var(--panel); padding:8px; border-bottom:1px solid var(--line); position:sticky; top:52px; z-index:9; }
-  nav button{ background:var(--panel2); color:var(--dim); border:1px solid var(--line); border-radius:6px; padding:8px 12px; font-size:13px; white-space:nowrap; cursor:pointer; }
-  nav button.active{ background:var(--navy); color:#fff; border-color:var(--navy); }
-  main{ padding:14px; max-width:900px; margin:0 auto; }
-  h1{ font-size:22px; color:#fff; margin:0 0 4px; }
-  h2{ font-size:17px; color:#a9c4dd; margin:20px 0 8px; border-bottom:1px solid var(--line); padding-bottom:4px; }
-  h3{ font-size:14px; color:var(--orange); margin:14px 0 4px; }
-  p{ line-height:1.5; }
-  .muted{ color:var(--dim); font-size:13px; }
-  .card{ background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:12px; margin:8px 0; }
-  .card.click{ cursor:pointer; } .card.click:hover{ border-color:var(--navy); }
-  .card h3{ margin:0 0 4px; color:#fff; }
-  .badge{ display:inline-block; background:var(--navy); color:#cfe0f0; font-size:11px; padding:2px 7px; border-radius:4px; margin-right:6px; }
-  .badge.orange{ background:var(--orange); color:#1a1300; }
-  table{ width:100%; border-collapse:collapse; margin:6px 0; font-size:13px; }
-  th,td{ text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
-  th{ color:#a9c4dd; }
-  .flag{ border-left:3px solid var(--orange); background:#20242a; padding:8px 10px; margin:8px 0; border-radius:0 6px 6px 0; }
-  .mono{ font-family:ui-monospace,Menlo,Consolas,monospace; font-size:12px; background:#0e141a; padding:8px; border-radius:6px; overflow-x:auto; white-space:pre-wrap; }
-  .kv{ display:grid; grid-template-columns:auto 1fr; gap:2px 12px; font-size:13px; }
-  .kv dt{ color:var(--dim); } .kv dd{ margin:0; }
-  button.act{ background:var(--navy); color:#fff; border:none; border-radius:6px; padding:9px 14px; font-size:14px; cursor:pointer; margin:4px 4px 4px 0; }
-  button.act.orange{ background:var(--orange); color:#1a1300; }
-  button.act.ghost{ background:transparent; border:1px solid var(--line); color:var(--dim); }
-  button.act.danger{ background:#5c2020; }
-  textarea,input{ width:100%; background:#0e141a; color:var(--text); border:1px solid var(--line); border-radius:6px; padding:8px; font-size:13px; font-family:inherit; margin:3px 0; }
-  .back{ color:#a9c4dd; cursor:pointer; font-size:13px; display:inline-block; margin-bottom:8px; }
-  .ph{ border:2px dashed var(--line); border-radius:8px; padding:20px; text-align:center; color:var(--dim); }
+  html,body{ margin:0; }
+  body{
+    background:
+      linear-gradient(var(--grid) 1px, transparent 1px) 0 0/28px 28px,
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/28px 28px,
+      radial-gradient(120% 80% at 50% -10%, #10202e 0%, var(--bg) 60%);
+    color:var(--text); font-family:var(--body); -webkit-text-size-adjust:100%;
+    letter-spacing:.1px;
+  }
+  ::selection{ background:var(--orange); color:#1a1300; }
+
+  /* ---- header: a data-plate ---- */
+  header{
+    position:sticky; top:0; z-index:20;
+    background:linear-gradient(180deg, rgba(11,18,25,.96), rgba(11,18,25,.86));
+    backdrop-filter:blur(8px); border-bottom:1px solid var(--line);
+    padding:10px 14px;
+  }
+  .plate{ display:flex; align-items:baseline; gap:10px; }
+  .plate .mark{ font-family:var(--disp); font-weight:800; font-size:20px; letter-spacing:3px; color:#fff; }
+  .plate .mark .k{ color:var(--orange); }
+  .plate .sub{ font-family:var(--mono); font-size:10px; color:var(--dim); letter-spacing:.5px; text-transform:uppercase; }
+  .plate .ver{ margin-left:auto; font-family:var(--mono); font-size:10px; color:var(--dimmer); border:1px solid var(--line); padding:2px 6px; border-radius:3px; }
+
+  /* ---- nav: tab strip like a filing system ---- */
+  nav{ position:sticky; top:47px; z-index:19; display:flex; gap:2px; overflow-x:auto;
+    background:rgba(11,18,25,.9); backdrop-filter:blur(6px); border-bottom:1px solid var(--line); padding:6px 8px; scrollbar-width:none; }
+  nav::-webkit-scrollbar{ display:none; }
+  nav button{
+    font-family:var(--mono); font-size:11px; letter-spacing:.5px; text-transform:uppercase;
+    background:transparent; color:var(--dim); border:1px solid transparent; border-radius:5px;
+    padding:7px 12px; white-space:nowrap; cursor:pointer; transition:.15s; position:relative;
+  }
+  nav button:hover{ color:var(--text); }
+  nav button.active{ color:#fff; background:var(--navy-lo); border-color:var(--navy-hi); }
+  nav button.active::after{ content:''; position:absolute; left:10px; right:10px; bottom:-7px; height:2px; background:var(--orange); }
+
+  main{ padding:16px 14px 60px; max-width:920px; margin:0 auto; }
+
+  /* ---- typographic system ---- */
+  .eyebrow{ font-family:var(--mono); font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--orange); margin:0 0 4px; }
+  h1{ font-family:var(--disp); font-size:26px; letter-spacing:1px; color:#fff; margin:0 0 2px; font-weight:800; }
+  h2{ font-family:var(--mono); font-size:12px; letter-spacing:1.5px; text-transform:uppercase; color:var(--dim);
+      margin:26px 0 10px; padding-bottom:6px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:8px; }
+  h2::before{ content:''; width:6px; height:6px; background:var(--orange); transform:rotate(45deg); }
+  h3{ font-family:var(--disp); font-size:15px; color:var(--orange); margin:16px 0 4px; letter-spacing:.4px; }
+  p{ line-height:1.6; color:#d6e0ea; }
+  .dim{ color:var(--dim); } .small{ font-size:12px; }
+
+  /* ---- data readouts: monospace, instrument-panel ---- */
+  .readout{ font-family:var(--mono); font-size:12.5px; background:linear-gradient(180deg,#0a1119,#0c141d);
+    border:1px solid var(--line); border-radius:8px; padding:12px 14px; margin:8px 0; overflow-x:auto; }
+  .readout .rk{ color:var(--dim); } .readout .rv{ color:#eaf2fa; }
+  .kv{ display:grid; grid-template-columns:auto 1fr; gap:5px 16px; font-family:var(--mono); font-size:12.5px; }
+  .kv dt{ color:var(--dim); white-space:nowrap; } .kv dd{ margin:0; color:#eaf2fa; }
+
+  /* ---- vehicle card = data plate ---- */
+  .plate-card{ position:relative; background:linear-gradient(180deg, var(--panel), var(--panel-2));
+    border:1px solid var(--line); border-radius:10px; padding:0; margin:10px 0; overflow:hidden; cursor:pointer; transition:.18s; }
+  .plate-card:hover{ border-color:var(--navy-hi); transform:translateY(-1px); box-shadow:0 6px 22px rgba(0,0,0,.35); }
+  .plate-card .pc-top{ display:flex; align-items:stretch; }
+  .pc-stamp{ font-family:var(--disp); font-weight:800; font-size:18px; letter-spacing:1px; color:#fff;
+    background:var(--navy-lo); border-right:1px solid var(--line); padding:14px 12px; min-width:64px; text-align:center; display:flex; align-items:center; justify-content:center; }
+  .pc-main{ padding:11px 13px; flex:1; min-width:0; }
+  .pc-desig{ font-family:var(--disp); font-size:16px; color:#fff; letter-spacing:.5px; }
+  .pc-role{ font-family:var(--mono); font-size:11px; color:var(--dim); margin-top:2px; }
+  .pc-status{ font-family:var(--mono); font-size:9px; text-transform:uppercase; letter-spacing:1px; padding:2px 6px; border-radius:3px; border:1px solid var(--line-hi); color:var(--dim); }
+  .pc-status.concept{ color:var(--good); border-color:#245c42; }
+  .pc-status.teased{ color:var(--orange); border-color:var(--orange-dim); }
+  /* station strip mini-diagram */
+  .station-strip{ height:22px; display:flex; align-items:center; gap:1px; padding:0 13px 12px; }
+  .ss-seg{ height:9px; border-radius:1px; opacity:.85; }
+
+  /* ---- badges / stamps ---- */
+  .stamp{ display:inline-block; font-family:var(--mono); font-size:10px; letter-spacing:1px; text-transform:uppercase;
+    padding:3px 8px; border:1px solid var(--navy-hi); color:#bcd6ef; border-radius:4px; margin-right:6px; }
+  .stamp.orange{ border-color:var(--orange-dim); color:var(--orange); }
+
+  /* ---- caution flag (open items / flagged sections) ---- */
+  .flag{ position:relative; background:repeating-linear-gradient(45deg,#20242a,#20242a 10px,#242017 10px,#242017 20px);
+    border:1px solid var(--orange-dim); border-left:4px solid var(--orange); border-radius:0 8px 8px 0; padding:10px 12px; margin:8px 0; }
+  .flag .fl-body{ background:rgba(11,18,25,.72); padding:6px 8px; border-radius:4px; font-size:13px; line-height:1.5; }
+
+  /* ---- tables ---- */
+  table{ width:100%; border-collapse:collapse; font-family:var(--mono); font-size:12px; margin:6px 0; }
+  th,td{ text-align:left; padding:7px 9px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th{ color:var(--dim); text-transform:uppercase; font-size:10px; letter-spacing:1px; }
+  tr:hover td{ background:rgba(40,82,125,.08); }
+
+  /* ---- revision / changelog block ---- */
+  .rev{ display:grid; grid-template-columns:auto 1fr; gap:2px 12px; font-family:var(--mono); font-size:12px; border-left:2px solid var(--navy-hi); padding:6px 0 6px 12px; margin:6px 0; }
+  .rev .rev-date{ color:var(--orange); } .rev .rev-what{ color:#fff; } .rev .rev-why{ color:var(--dim); grid-column:2; }
+
+  /* ---- buttons / inputs ---- */
+  button.act{ font-family:var(--mono); font-size:12px; letter-spacing:.5px; background:var(--navy); color:#fff; border:1px solid var(--navy-hi);
+    border-radius:6px; padding:9px 14px; cursor:pointer; margin:4px 4px 4px 0; transition:.15s; }
+  button.act:hover{ background:var(--navy-hi); }
+  button.act.orange{ background:transparent; border-color:var(--orange-dim); color:var(--orange); }
+  button.act.orange:hover{ background:rgba(227,154,28,.12); }
+  button.act.ghost{ background:transparent; color:var(--dim); }
+  button.act.danger{ background:transparent; border-color:#5c2626; color:#e08a8a; }
+  textarea,input{ width:100%; font-family:var(--mono); font-size:12.5px; background:#0a1119; color:var(--text);
+    border:1px solid var(--line); border-radius:6px; padding:9px; margin:3px 0; }
+  input:focus,textarea:focus{ outline:none; border-color:var(--navy-hi); }
+  .back{ font-family:var(--mono); font-size:11px; color:var(--orange); cursor:pointer; display:inline-block; margin-bottom:10px; letter-spacing:.5px; }
+  .ph{ border:1px dashed var(--line); border-radius:8px; padding:22px; text-align:center; color:var(--dim); font-family:var(--mono); font-size:12px; }
   .row{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
-  .chg{ font-size:13px; padding:8px 0; border-bottom:1px solid var(--line); }
-  .chg b{ color:#fff; }
-  .status{ font-size:12px; padding:4px 8px; border-radius:4px; margin:6px 0; display:none; }
-  .status.show{ display:block; }
-  .status.ok{ background:#16321f; color:#7fdca0; } .status.err{ background:#3a1616; color:#f0a0a0; }
-  .ifo-stage{ background:linear-gradient(180deg,#0d1620,#12202c); border:1px solid var(--line); border-radius:10px; height:200px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
-  .ifo-ship{ width:90px; height:44px; background:#243444; border:1px solid #35506a; border-radius:8px 22px 22px 8px; margin:0 8px; opacity:.55; }
-  .ifo-dot{ width:9px;height:9px;border-radius:50%;background:var(--orange);display:inline-block;margin-right:6px;vertical-align:middle; }
-  .chip{ background:var(--panel2); border:1px solid var(--line); border-radius:16px; padding:6px 12px; font-size:12px; color:var(--dim); }
-  .tl-rail{ display:flex; overflow-x:auto; padding:30px 6px 14px; position:relative; }
-  .tl-rail::before{ content:''; position:absolute; left:0; right:0; top:44px; height:2px; background:var(--line); }
-  .tl-node{ min-width:150px; position:relative; padding:0 10px; cursor:pointer; }
-  .tl-dot{ width:14px;height:14px;border-radius:50%;background:var(--navy);border:2px solid var(--orange); z-index:1; margin:0 auto 8px; }
-  .tl-node:hover .tl-dot{ background:var(--orange); }
-  .tl-date{ text-align:center; font-size:11px; color:var(--orange); margin-bottom:2px; }
-  .tl-title{ text-align:center; font-size:12px; color:var(--text); line-height:1.3; }
-  #boot{ padding:14px; color:#9fb0c0; font-size:13px; }
+  .card{ background:linear-gradient(180deg,var(--panel),var(--panel-2)); border:1px solid var(--line); border-radius:9px; padding:13px; margin:9px 0; }
+  .status{ font-family:var(--mono); font-size:11px; padding:5px 9px; border-radius:5px; margin:6px 0; display:none; }
+  .status.show{ display:block; } .status.ok{ background:#0f2a1c; color:var(--good); border:1px solid #245c42; } .status.err{ background:#2a1414; color:#e89090; border:1px solid #5c2626; }
+
+  /* ---- IFO ---- */
+  .ifo-stage{ background:
+      linear-gradient(var(--grid) 1px,transparent 1px) 0 0/22px 22px,
+      linear-gradient(90deg,var(--grid) 1px,transparent 1px) 0 0/22px 22px,
+      linear-gradient(180deg,#0c1722,#0a1119);
+    border:1px solid var(--line); border-radius:10px; height:210px; display:flex; align-items:center; justify-content:center; gap:14px; position:relative; overflow:hidden; }
+  .ifo-ship{ width:70px; height:38px; background:linear-gradient(180deg,#2a3e50,#1c2b39); border:1px solid #35506a; border-radius:6px 20px 20px 6px; opacity:.6; }
+  .ifo-dot{ width:8px;height:8px;border-radius:50%;background:var(--orange);display:inline-block;margin-right:8px;box-shadow:0 0 8px rgba(227,154,28,.6); }
+  .chip{ font-family:var(--mono); font-size:11px; background:var(--navy-lo); border:1px solid var(--navy-hi); border-radius:14px; padding:5px 11px; color:#bcd6ef; }
+
+  /* ---- horizontal timeline: a museum rail ---- */
+  .tl-rail{ display:flex; overflow-x:auto; padding:34px 6px 16px; position:relative; scrollbar-width:thin; }
+  .tl-rail::before{ content:''; position:absolute; left:0; right:0; top:48px; height:2px; background:linear-gradient(90deg,transparent,var(--navy-hi) 8%,var(--navy-hi) 92%,transparent); }
+  .tl-node{ min-width:158px; position:relative; padding:0 12px; cursor:pointer; }
+  .tl-dot{ width:15px; height:15px; border-radius:50%; background:var(--navy); border:2px solid var(--orange); margin:0 auto 10px; box-shadow:0 0 0 4px rgba(11,18,25,1),0 0 10px rgba(227,154,28,.4); transition:.15s; }
+  .tl-node:hover .tl-dot{ background:var(--orange); transform:scale(1.15); }
+  .tl-date{ text-align:center; font-family:var(--mono); font-size:10px; color:var(--orange); margin-bottom:3px; letter-spacing:.5px; }
+  .tl-title{ text-align:center; font-size:12px; color:var(--text); line-height:1.35; }
+
+  /* ---- blueprint draw-on animation ---- */
+  @keyframes drawin{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:translateY(0); } }
+  .anim > *{ animation:drawin .32s ease both; }
+  .anim > *:nth-child(2){ animation-delay:.03s } .anim > *:nth-child(3){ animation-delay:.06s }
+  .anim > *:nth-child(4){ animation-delay:.09s } .anim > *:nth-child(5){ animation-delay:.12s }
+  .anim > *:nth-child(6){ animation-delay:.15s } .anim > *:nth-child(n+7){ animation-delay:.18s }
+  #boot{ padding:20px; color:var(--dim); font-family:var(--mono); font-size:12px; }
+  .scanline{ display:inline-block; width:8px; height:13px; background:var(--orange); margin-left:3px; animation:blink 1s steps(2) infinite; vertical-align:middle; }
+  @keyframes blink{ 50%{ opacity:0 } }
 </style>
 </head>
 <body>
-<header><b>CASTLE</b><span id="hspan">Centralized Archive &amp; Systems Tracking for Local Engineering</span></header>
+<header>
+  <div class="plate">
+    <span class="mark"><span class="k">C</span>ASTLE</span>
+    <span class="sub" id="hsub">Centralized Archive · Systems Tracking · Local Engineering</span>
+    <span class="ver" id="hver">—</span>
+  </div>
+</header>
 <nav id="nav"></nav>
-<main id="view"><div id="boot">Loading the keep…</div></main>
+<main id="view"><div id="boot">Initializing the keep<span class="scanline"></span></div></main>
 
-<!-- Supabase as a classic UMD script — NO ES module import that can silently kill the app. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-/* ============================================================
-   CASTLE v3 — every top-level action guarded. One failure in a
-   Supabase tab can NEVER blank the whole app. Fleet/vehicles/reports
-   work from repo JSON even if Supabase is completely unavailable.
-   ============================================================ */
 (function(){
   "use strict";
-  var VERSION = 'v3';
-  var SUPABASE_URL = 'https://tvlkxrqrwjgfivwsbniu.supabase.co';
-  var SUPABASE_KEY = 'sb_publishable_Y9rEqbltp4G7BL0OjqxIQw_cj0v0INi';
-  var DATA_BASE = './data';
+  var VERSION='v4';
+  var SUPABASE_URL='https://tvlkxrqrwjgfivwsbniu.supabase.co';
+  var SUPABASE_KEY='sb_publishable_Y9rEqbltp4G7BL0OjqxIQw_cj0v0INi';
+  var DATA_BASE='./data';
 
-  // Supabase client — created defensively. If the CDN script didn't load, sb stays null
-  // and Supabase-backed tabs show a clear message instead of crashing.
-  var sb = null, sbError = null;
-  try {
-    if (window.supabase && typeof window.supabase.createClient === 'function') {
-      sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    } else {
-      sbError = 'Supabase library did not load (CDN blocked or offline).';
-    }
-  } catch (e) { sbError = 'Supabase init failed: ' + (e && e.message ? e.message : e); }
+  var sb=null, sbError=null;
+  try{ if(window.supabase&&window.supabase.createClient){ sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY); } else { sbError='Supabase library did not load (CDN blocked or offline).'; } }
+  catch(e){ sbError='Supabase init failed: '+(e&&e.message?e.message:e); }
 
-  var state = { index:null, reports:null, vehicles:{} };
+  var state={ index:null, reports:null, vehicles:{} };
   function el(h){ var t=document.createElement('template'); t.innerHTML=(h||'').trim(); return t.content.firstChild; }
   function esc(s){ return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
   function view(){ return document.getElementById('view'); }
-  function fail(msg){ view().innerHTML = '<div class="flag">'+esc(msg)+'</div>'; }
+  function paint(html,anim){ var v=view(); v.innerHTML=html; if(anim) v.classList.add('anim'); else v.classList.remove('anim'); }
+  function fail(m){ paint('<div class="flag"><div class="fl-body">'+esc(m)+'</div></div>',false); }
+  function loadJSON(p){ return fetch(p,{cache:'no-store'}).then(function(r){ if(!r.ok) throw new Error(p+' → HTTP '+r.status); return r.json(); }); }
 
-  function loadJSON(p){
-    return fetch(p,{cache:'no-store'}).then(function(r){ if(!r.ok) throw new Error(p+' → HTTP '+r.status); return r.json(); });
-  }
+  // class → accent color for station strips / stamps
+  var CLASS_COLOR={ EX:'#4fd08a', VX:'#57b6e6', LX:'#E39A1C', TX:'#c98a5a', GX:'#b57de0', DX:'#e0687d', MX:'#7de0c8', RX:'#e0d267' };
+  function cc(cls){ return CLASS_COLOR[cls]||'#8ea3b6'; }
 
-  /* ---------- BOOT ---------- */
   function boot(){
-    loadJSON(DATA_BASE+'/index.json').then(function(ix){
-      state.index = ix;
-      return loadJSON(DATA_BASE+'/reports.json').catch(function(){ return {reports:[]}; });
-    }).then(function(rep){
-      state.reports = rep;
-      document.getElementById('hspan').textContent += '  ·  '+VERSION;
-      buildNav(); route('fleet');
-    }).catch(function(e){
-      fail('Could not load '+DATA_BASE+'/index.json — '+(e&&e.message?e.message:e)+'. Check the data/ folder is in the repo.');
-    });
+    loadJSON(DATA_BASE+'/index.json').then(function(ix){ state.index=ix; return loadJSON(DATA_BASE+'/reports.json').catch(function(){return {reports:[]};}); })
+    .then(function(rep){ state.reports=rep; document.getElementById('hver').textContent=VERSION; buildNav(); route('fleet'); })
+    .catch(function(e){ fail('Could not load '+DATA_BASE+'/index.json — '+(e&&e.message?e.message:e)+'. Check the data/ folder is in the repo.'); });
   }
 
   var TABS=[['fleet','Fleet'],['ifo','IFO'],['reports','Reports'],['timeline','Timeline'],['architect','Architect'],['photos','Photos'],['data','Backup']];
-  function buildNav(){ var nav=document.getElementById('nav'); nav.innerHTML=''; TABS.forEach(function(t){ var b=el('<button data-tab="'+t[0]+'">'+t[1]+'</button>'); b.onclick=function(){ route(t[0]); }; nav.appendChild(b); }); }
-  function setActive(tab){ Array.prototype.forEach.call(document.querySelectorAll('#nav button'),function(b){ b.classList.toggle('active', b.dataset.tab===tab); }); }
+  function buildNav(){ var n=document.getElementById('nav'); n.innerHTML=''; TABS.forEach(function(t){ var b=el('<button data-tab="'+t[0]+'">'+t[1]+'</button>'); b.onclick=function(){ route(t[0]); }; n.appendChild(b); }); }
+  function setActive(tab){ Array.prototype.forEach.call(document.querySelectorAll('#nav button'),function(b){ b.classList.toggle('active',b.dataset.tab===tab); }); }
+  function route(tab,arg){ try{ setActive(tab); window.scrollTo(0,0);
+    if(tab==='fleet') return arg?renderVehicle(arg):renderFleet();
+    if(tab==='ifo') return renderIFO();
+    if(tab==='reports') return renderReports();
+    if(tab==='timeline') return renderTimeline();
+    if(tab==='architect') return renderArchitect();
+    if(tab==='photos') return renderPhotos();
+    if(tab==='data') return renderData();
+  }catch(e){ fail('Error rendering "'+tab+'": '+(e&&e.message?e.message:e)); } }
 
-  function route(tab, arg){
-    try{
-      setActive(tab); window.scrollTo(0,0);
-      if(tab==='fleet') return arg?renderVehicle(arg):renderFleet();
-      if(tab==='ifo') return renderIFO();
-      if(tab==='reports') return renderReports();
-      if(tab==='timeline') return renderTimeline();
-      if(tab==='architect') return renderArchitect();
-      if(tab==='photos') return renderPhotos();
-      if(tab==='data') return renderData();
-    }catch(e){ fail('Error rendering "'+tab+'": '+(e&&e.message?e.message:e)); }
+  /* ---------- station strip from blueprint (rough, decorative-but-real) ---------- */
+  function stationStrip(d){
+    // Use component/section count as proxy segments; color by class. Purely visual, from real structure.
+    var segs=[];
+    var base=cc(d.class);
+    var n=(d.components&&d.components.length)|| (d.sections&&d.sections.length) || 5;
+    n=Math.max(4,Math.min(9,n));
+    for(var i=0;i<n;i++){ var w=6+((i*37)%22); segs.push('<div class="ss-seg" style="width:'+w+'%;background:'+(i%3===0?base:'#2a3e50')+';opacity:'+(0.5+((i%3)*0.2))+'"></div>'); }
+    // nose cap
+    segs.push('<div class="ss-seg" style="width:10px;height:0;border-left:9px solid '+base+';border-top:5px solid transparent;border-bottom:5px solid transparent;background:none"></div>');
+    return '<div class="station-strip">'+segs.join('')+'</div>';
   }
 
   /* ---------- FLEET ---------- */
   function renderFleet(){
     var ix=state.index, byClass={};
     ix.vehicles.forEach(function(x){ (byClass[x.class]=byClass[x.class]||[]).push(x); });
-    var h='<h1>'+esc(ix.castle.company)+'</h1><p class="muted">'+esc(ix.castle.motto)+'</p><h2>Fleet</h2>';
-    Object.keys(byClass).sort().forEach(function(cls){
+    var h='<p class="eyebrow">KnightShip Aerospace · Fleet Registry</p>';
+    h+='<h1>'+esc(ix.castle.company)+'</h1><p class="dim small">'+esc(ix.castle.motto)+'</p>';
+    var order=['EX','VX','LX','GX','TX','MX','DX','RX'];
+    var classes=Object.keys(byClass).sort(function(a,b){ return (order.indexOf(a)+99)%100-(order.indexOf(b)+99)%100; });
+    classes.forEach(function(cls){
       var q=(ix.taxonomy.classes.filter(function(c){return c.code===cls[0];})[0]||{}).name||'';
-      h+='<h3>'+esc(cls)+' — '+esc(q)+'</h3>';
-      byClass[cls].forEach(function(x){ h+='<div class="card click" data-id="'+esc(x.id)+'"><h3>'+esc(x.designation)+'</h3><div><span class="badge">'+esc(x.class)+'</span><span class="badge '+(x.status==='teased'?'orange':'')+'">'+esc(x.status)+'</span> <span class="muted">'+esc(x.role)+'</span></div></div>'; });
+      h+='<h2>'+esc(cls)+' — '+esc(q)+'</h2>';
+      byClass[cls].forEach(function(x){
+        h+='<div class="plate-card" data-id="'+esc(x.id)+'">'
+          +'<div class="pc-top"><div class="pc-stamp" style="color:'+cc(cls)+'">'+esc(x.class)+'</div>'
+          +'<div class="pc-main"><div class="pc-desig">'+esc(x.designation)+'</div>'
+          +'<div class="pc-role">'+esc(x.role)+'</div>'
+          +'<div style="margin-top:7px"><span class="pc-status '+esc(x.status)+'">'+esc(x.status)+'</span></div></div></div>'
+          + stationStrip(x.id?(state.vehicles[x.id]||x):x)
+          +'</div>';
+      });
     });
-    h+='<h2>Class taxonomy</h2><div class="kv">';
-    ix.taxonomy.classes.forEach(function(c){ h+='<dt>'+esc(c.code)+'X — '+esc(c.name)+'</dt><dd class="muted">'+esc(c.desc)+'</dd>'; });
-    h+='</div><p class="muted" style="margin-top:8px">'+esc(ix.taxonomy.note)+'</p>';
-    view().innerHTML=h;
-    Array.prototype.forEach.call(view().querySelectorAll('.card'),function(c){ c.onclick=function(){ route('fleet', c.dataset.id); }; });
+    h+='<h2>Class Taxonomy</h2><div class="readout">';
+    ix.taxonomy.classes.forEach(function(c){ h+='<div><span class="rv" style="color:'+cc(c.code+'X')+'">'+esc(c.code)+'X</span> <span class="rk">'+esc(c.name)+'</span> — '+esc(c.desc)+'</div>'; });
+    h+='</div><p class="dim small">'+esc(ix.taxonomy.note)+'</p>';
+    paint(h,true);
+    Array.prototype.forEach.call(view().querySelectorAll('.plate-card'),function(c){ c.onclick=function(){ route('fleet',c.dataset.id); }; });
   }
 
+  /* ---------- VEHICLE ---------- */
   function renderVehicle(id){
-    view().innerHTML='<div id="boot">Loading '+esc(id)+'…</div>';
+    paint('<div id="boot">Retrieving '+esc(id)+' record<span class="scanline"></span></div>',false);
     var render=function(d){
       state.vehicles[id]=d; var s=d.specs||{};
-      var h='<span class="back">← Fleet</span><h1>'+esc(d.designation)+'</h1>';
-      h+='<div class="row"><span class="badge">'+esc(d.class)+' · '+esc(d.classQuality)+'</span><span class="badge '+(d.status==='teased'?'orange':'')+'">'+esc(d.status)+'</span></div>';
-      h+='<p>'+esc(d.description||d.summary)+'</p><h2>Specifications</h2><div class="kv">';
-      for(var k in s){ if(s.hasOwnProperty(k) && typeof s[k]!=='object'){ h+='<dt>'+esc(k)+'</dt><dd>'+esc(s[k])+'</dd>'; } }
+      var h='<span class="back">◂ RETURN TO REGISTRY</span>';
+      h+='<p class="eyebrow">'+esc(d.class)+' · '+esc(d.classQuality)+' Class</p>';
+      h+='<h1>'+esc(d.designation)+'</h1>';
+      h+='<div class="row" style="margin:6px 0 2px"><span class="stamp" style="border-color:'+cc(d.class)+';color:'+cc(d.class)+'">'+esc(d.class)+'-CLASS</span><span class="stamp '+(d.status==='teased'?'orange':'')+'">'+esc(d.status)+'</span></div>';
+      h+='<p>'+esc(d.description||d.summary)+'</p>';
+
+      // Specs as instrument readout
+      h+='<h2>Specification</h2><div class="readout">';
+      var any=false;
+      for(var k in s){ if(s.hasOwnProperty(k)&&typeof s[k]!=='object'){ h+='<div><span class="rk">'+esc(pad(k))+'</span>  <span class="rv">'+esc(s[k])+'</span></div>'; any=true; } }
+      if(!any) h+='<div class="rk">— not yet worked —</div>';
       h+='</div>';
-      if(s.deltaV){ h+='<h3>Δv</h3><div class="kv">'; for(var kk in s.deltaV){ if(s.deltaV.hasOwnProperty(kk)) h+='<dt>'+esc(kk)+'</dt><dd>'+esc(s.deltaV[kk])+'</dd>'; } h+='</div>'; }
-      function L(t,a,f){ if(!a||!a.length)return''; var x='<h2>'+esc(t)+'</h2>'; a.forEach(function(o){ x+='<div class="chg">'+f(o)+'</div>'; }); return x; }
-      h+=L('Components',d.components,function(c){ return '<b>'+esc(c.name)+'</b> — '+esc(c.what)+'<div class="muted">'+esc(c.location||'')+(c.detail?' · '+esc(c.detail):'')+'</div>'; });
-      h+=L('Capabilities',d.capabilities,function(c){ return '<b>'+esc(c.name)+'</b><div class="muted">'+esc(c.detail)+'</div>'; });
-      h+=L('Modules',d.modules,function(m){ return '<b>'+esc(m.name)+'</b>'+(m.mass_t?' <span class="muted">('+esc(m.mass_t)+' t)</span>':'')+'<div class="muted">'+esc(m.purpose)+'</div>'; });
-      if(d.calculations&&d.calculations.length){ h+='<h2>Calculations</h2>'; d.calculations.forEach(function(c){ h+='<h3>'+esc(c.title)+'</h3><div class="mono">method: '+esc(c.method)+'\nresult: '+esc(c.result)+(c.note?'\nnote:   '+esc(c.note):'')+'</div>'; }); }
-      if(d.sections&&d.sections.length){ h+='<h2>Detail</h2>'; d.sections.forEach(function(x){ h+= x.flag?'<div class="flag"><b>'+esc(x.heading)+'</b><br>'+esc(x.body)+'</div>':'<h3>'+esc(x.heading)+'</h3><p>'+esc(x.body)+'</p>'; }); }
-      if(d.blueprint){ h+='<h2>Blueprint</h2><div class="mono">'+esc(d.blueprint.frame)+'\n\n'+esc(d.blueprint.stations)+(d.blueprint.notes?'\n\n'+esc(d.blueprint.notes):'')+'</div>'; }
-      if(d.comparisons&&d.comparisons.length){ h+='<h2>Comparisons</h2>'; d.comparisons.forEach(function(c){ h+='<h3>vs '+esc(c.against)+' <span class="muted">('+esc(c.type)+')</span></h3><table><tr><th></th><th>'+esc(d.designation)+'</th><th>'+esc(c.against)+'</th></tr>'; c.rows.forEach(function(r){ h+='<tr><td class="muted">'+esc(r.label)+'</td><td>'+esc(r.this)+'</td><td>'+esc(r.other)+'</td></tr>'; }); h+='</table>'; }); }
-      if(d.decisions&&d.decisions.length){ h+='<h2>Decisions</h2>'; d.decisions.forEach(function(x){ h+='<div class="chg"><b>'+esc(x.chose)+'</b> over '+esc(x.over)+'<div class="muted">'+esc(x.why)+'</div></div>'; }); }
-      if(d.openItems&&d.openItems.length){ h+='<h2>Open items</h2>'; d.openItems.forEach(function(o){ h+='<div class="flag">'+esc(o)+'</div>'; }); }
-      if(d.changelog&&d.changelog.length){ h+='<h2>Changelog</h2>'; d.changelog.forEach(function(c){ h+='<div class="chg"><b>'+esc(c.what)+'</b> <span class="muted">'+esc(c.date)+'</span><div class="muted">'+esc(c.why)+'</div></div>'; }); }
-      view().innerHTML=h; view().querySelector('.back').onclick=function(){ route('fleet'); };
+      if(s.deltaV){ h+='<h3>Δv Budget</h3><div class="readout">'; for(var kk in s.deltaV){ if(s.deltaV.hasOwnProperty(kk)) h+='<div><span class="rk">'+esc(pad(kk))+'</span>  <span class="rv">'+esc(s.deltaV[kk])+'</span></div>'; } h+='</div>'; }
+
+      h+=listBlock('Components',d.components,function(c){ return '<b style="color:#fff">'+esc(c.name)+'</b> — '+esc(c.what)+'<div class="dim small" style="font-family:var(--mono)">'+esc(c.location||'')+(c.detail?' · '+esc(c.detail):'')+'</div>'; });
+      h+=listBlock('Capabilities',d.capabilities,function(c){ return '<b style="color:#fff">'+esc(c.name)+'</b><div class="dim small">'+esc(c.detail)+'</div>'; });
+      h+=listBlock('Modules',d.modules,function(m){ return '<b style="color:#fff">'+esc(m.name)+'</b>'+(m.mass_t?' <span class="dim">('+esc(m.mass_t)+' t)</span>':'')+'<div class="dim small">'+esc(m.purpose)+'</div>'; });
+
+      if(d.calculations&&d.calculations.length){ h+='<h2>Calculations</h2>'; d.calculations.forEach(function(c){ h+='<h3>'+esc(c.title)+'</h3><div class="readout"><div><span class="rk">method</span>  '+esc(c.method)+'</div><div><span class="rk">result</span>  <span class="rv">'+esc(c.result)+'</span></div>'+(c.note?'<div><span class="rk">note  </span>  '+esc(c.note)+'</div>':'')+'</div>'; }); }
+
+      if(d.sections&&d.sections.length){ h+='<h2>Technical Detail</h2>'; d.sections.forEach(function(x){ h+= x.flag?'<div class="flag"><div class="fl-body"><b style="color:var(--orange)">'+esc(x.heading)+'</b><br>'+esc(x.body)+'</div></div>':'<h3>'+esc(x.heading)+'</h3><p>'+esc(x.body)+'</p>'; }); }
+
+      if(d.blueprint){ h+='<h2>Blueprint</h2><div class="readout">'+esc(d.blueprint.frame)+'\n\n'+esc(d.blueprint.stations)+(d.blueprint.notes?'\n\n'+esc(d.blueprint.notes):'')+'</div>'; }
+
+      if(d.comparisons&&d.comparisons.length){ h+='<h2>Comparison</h2>'; d.comparisons.forEach(function(c){ h+='<h3>vs '+esc(c.against)+' <span class="dim small">('+esc(c.type)+')</span></h3><table><tr><th></th><th>'+esc(d.designation)+'</th><th>'+esc(c.against)+'</th></tr>'; c.rows.forEach(function(r){ h+='<tr><td class="dim">'+esc(r.label)+'</td><td>'+esc(r.this)+'</td><td>'+esc(r.other)+'</td></tr>'; }); h+='</table>'; }); }
+
+      if(d.decisions&&d.decisions.length){ h+='<h2>Design Decisions</h2>'; d.decisions.forEach(function(x){ h+='<div class="rev"><span class="rev-what">'+esc(x.chose)+'</span><span class="rev-date">CHOSEN</span><span class="rev-why">over '+esc(x.over)+' — '+esc(x.why)+'</span></div>'; }); }
+
+      if(d.openItems&&d.openItems.length){ h+='<h2>Open Items</h2>'; d.openItems.forEach(function(o){ h+='<div class="flag"><div class="fl-body">'+esc(o)+'</div></div>'; }); }
+
+      if(d.changelog&&d.changelog.length){ h+='<h2>Revision History</h2>'; d.changelog.forEach(function(c){ h+='<div class="rev"><span class="rev-date">'+esc(c.date)+'</span><span class="rev-what">'+esc(c.what)+'</span><span class="rev-why">'+esc(c.why)+'</span></div>'; }); }
+
+      paint(h,true); view().querySelector('.back').onclick=function(){ route('fleet'); };
     };
     if(state.vehicles[id]) return render(state.vehicles[id]);
-    loadJSON(DATA_BASE+'/vehicles/'+id+'.json').then(render).catch(function(e){
-      view().innerHTML='<span class="back">← Fleet</span><div class="flag">Could not load '+esc(id)+' — '+esc(e.message)+'</div>';
-      view().querySelector('.back').onclick=function(){ route('fleet'); };
-    });
+    loadJSON(DATA_BASE+'/vehicles/'+id+'.json').then(render).catch(function(e){ paint('<span class="back">◂ RETURN</span><div class="flag"><div class="fl-body">Could not load '+esc(id)+' — '+esc(e.message)+'</div></div>',false); view().querySelector('.back').onclick=function(){ route('fleet'); }; });
   }
+  function pad(k){ k=String(k); while(k.length<16) k+=' '; return k; }
+  function listBlock(t,a,f){ if(!a||!a.length) return ''; var h='<h2>'+esc(t)+'</h2>'; a.forEach(function(o){ h+='<div class="card" style="padding:10px 12px">'+f(o)+'</div>'; }); return h; }
 
   /* ---------- IFO ---------- */
   function renderIFO(){
     var ix=state.index;
-    var h='<h1>Interactive Fleet Overview</h1><p class="muted">Flat placeholder layout. The 2.5D exploded views, animations, and mini-missions are the next (art) pass — this shows the intended structure.</p>';
-    h+='<div class="ifo-stage"><div class="ifo-ship"></div><div class="ifo-ship" style="width:120px;opacity:.7"></div><div class="ifo-ship"></div><div style="position:absolute;top:8px;right:10px" class="muted">¾ view</div></div>';
-    h+='<div class="row" style="margin-top:10px"><button class="act ghost">◀ ¾ high-front</button><button class="act ghost">¾ low-back ▶</button><button class="act orange">▶ Play mini-mission</button></div>';
-    h+='<h2>Select vehicle</h2><div class="row">';
-    ix.vehicles.forEach(function(x){ h+='<span class="chip">'+esc(x.designation)+'</span>'; });
-    h+='</div><h2>Component callouts (sample)</h2>';
-    ['Nose','Rings','LOX / CH₄ tanks','Engines','Fins / wings','Compacting mechanism'].forEach(function(c){ h+='<div class="chg"><span class="ifo-dot"></span>'+esc(c)+' <span class="muted">— click to deploy + narrate (later pass)</span></div>'; });
-    h+='<h2>Reserved per vehicle (in JSON)</h2><div class="mono">icon: ICON drawing\nviews: { highFront, lowBack } — base image + hotspots\nmissionSequence: [ launch, separate, orbit, land … ]</div>';
-    view().innerHTML=h;
+    var h='<p class="eyebrow">Interactive Fleet Overview</p><h1>IFO</h1><p class="dim small">Flat placeholder. The 2.5D exploded views, animations, and mini-missions attach here in a later pass.</p>';
+    h+='<div class="ifo-stage"><div class="ifo-ship"></div><div class="ifo-ship" style="width:96px;opacity:.75"></div><div class="ifo-ship"></div><div style="position:absolute;top:10px;right:12px" class="dim small" style="font-family:var(--mono)">¾ VIEW</div></div>';
+    h+='<div class="row" style="margin-top:10px"><button class="act ghost">◂ ¾ high-front</button><button class="act ghost">¾ low-back ▸</button><button class="act orange">▶ mini-mission</button></div>';
+    h+='<h2>Select Vehicle</h2><div class="row">'; ix.vehicles.forEach(function(x){ h+='<span class="chip">'+esc(x.designation)+'</span>'; }); h+='</div>';
+    h+='<h2>Component Callouts (sample)</h2>'; ['Nose','Rings','LOX / CH₄ tanks','Engines','Fins / wings','Compacting mechanism'].forEach(function(c){ h+='<div class="card" style="padding:9px 12px"><span class="ifo-dot"></span>'+esc(c)+' <span class="dim small">— deploy + narrate (later)</span></div>'; });
+    h+='<h2>Reserved (per vehicle JSON)</h2><div class="readout">icon: ICON drawing\nviews: { highFront, lowBack } — base image + hotspots\nmissionSequence: [ launch, separate, orbit, land … ]</div>';
+    paint(h,true);
   }
 
   /* ---------- REPORTS ---------- */
   function renderReports(){
     var r=(state.reports&&state.reports.reports)||[];
-    var h='<h1>Engineering Reports</h1><p class="muted">Session records from the repo. Read-only audit trail.</p>';
-    if(!r.length) h+='<div class="ph">No reports yet.</div>';
-    r.forEach(function(x){ h+='<div class="card"><h3>'+esc(x.title)+'</h3><div class="muted">'+esc(x.date)+' · '+esc(x.author||'Claude')+' · '+((x.vehicles||[]).map(esc).join(', '))+'</div><p>'+esc(x.body)+'</p></div>'; });
-    view().innerHTML=h;
+    var h='<p class="eyebrow">Engineering Log</p><h1>Reports</h1><p class="dim small">Session records from the repo. Read-only audit trail.</p>';
+    if(!r.length) h+='<div class="ph">NO REPORTS ON FILE</div>';
+    r.forEach(function(x){ h+='<div class="card"><h3 style="margin-top:0">'+esc(x.title)+'</h3><div class="dim small" style="font-family:var(--mono)">'+esc(x.date)+' · '+esc(x.author||'Claude')+' · '+((x.vehicles||[]).map(esc).join(', '))+'</div><p>'+esc(x.body)+'</p></div>'; });
+    paint(h,true);
   }
 
-  /* ---------- SUPABASE GUARD ---------- */
-  function needSB(){ if(sb) return true; view().innerHTML='<div class="flag">Supabase is not available: '+esc(sbError||'unknown')+'<br><br>Fleet, vehicles, and reports still work (they load from the repo). This tab needs the database connection.</div>'; return false; }
+  /* ---------- SUPABASE-BACKED ---------- */
+  function needSB(){ if(sb) return true; paint('<div class="flag"><div class="fl-body">Supabase unavailable: '+esc(sbError||'unknown')+'<br><br>Fleet, vehicles, and reports still work (repo JSON). This tab needs the database.</div></div>',false); return false; }
   function status(kind,msg){ var s=document.getElementById('st'); if(!s)return; s.className='status show '+kind; s.textContent=msg; setTimeout(function(){ s.className='status'; },3500); }
 
-  /* ---------- TIMELINE ---------- */
   function renderTimeline(){
     if(!needSB()) return;
-    view().innerHTML='<h1>Timeline</h1><div id="boot">Loading…</div>';
+    paint('<div id="boot">Loading timeline<span class="scanline"></span></div>',false);
     sb.from('timeline').select('*').order('entry_date',{ascending:true}).then(function(res){
       var data=res.data||[], error=res.error;
-      var h='<h1>Timeline</h1><div id="st" class="status"></div>';
-      if(error) h+='<div class="flag">Load error: '+esc(error.message)+'</div>';
-      h+='<div class="tl-rail">';
-      data.forEach(function(e){ h+='<div class="tl-node" data-id="'+e.id+'"><div class="tl-dot"></div><div class="tl-date">'+esc(e.entry_date||'')+'</div><div class="tl-title">'+esc(e.title)+'</div></div>'; });
-      h+='</div><div id="tlcard"></div>';
-      h+='<h2>Add / edit entry</h2><div class="card"><input id="t_title" placeholder="Title"><input id="t_date" type="date"><input id="t_veh" placeholder="Vehicle ids, comma-separated (e.g. lx23,tx04)"><textarea id="t_body" rows="3" placeholder="Details"></textarea><input type="hidden" id="t_id"><div class="row"><button class="act" id="t_save">Save</button><button class="act ghost" id="t_clear">Clear</button></div></div>';
-      view().innerHTML=h;
-      Array.prototype.forEach.call(view().querySelectorAll('.tl-node'),function(n){ n.onclick=function(){ showTLCard(data.filter(function(r){return r.id===n.dataset.id;})[0]); }; });
-      document.getElementById('t_save').onclick=saveTimeline;
-      document.getElementById('t_clear').onclick=function(){ ['t_title','t_date','t_veh','t_body','t_id'].forEach(function(i){ document.getElementById(i).value=''; }); };
+      var h='<p class="eyebrow">Program History</p><h1>Timeline</h1><div id="st" class="status"></div>';
+      if(error) h+='<div class="flag"><div class="fl-body">Load error: '+esc(error.message)+'</div></div>';
+      h+='<div class="tl-rail">'; data.forEach(function(e){ h+='<div class="tl-node" data-id="'+e.id+'"><div class="tl-dot"></div><div class="tl-date">'+esc(e.entry_date||'')+'</div><div class="tl-title">'+esc(e.title)+'</div></div>'; }); h+='</div><div id="tlcard"></div>';
+      h+='<h2>Add / Edit Entry</h2><div class="card"><input id="t_title" placeholder="Title"><input id="t_date" type="date"><input id="t_veh" placeholder="Vehicle ids (e.g. lx23,tx04)"><textarea id="t_body" rows="3" placeholder="Details"></textarea><input type="hidden" id="t_id"><div class="row"><button class="act" id="t_save">Save</button><button class="act ghost" id="t_clear">Clear</button></div></div>';
+      paint(h,true);
+      Array.prototype.forEach.call(view().querySelectorAll('.tl-node'),function(n){ n.onclick=function(){ showTL(data.filter(function(r){return r.id===n.dataset.id;})[0]); }; });
+      document.getElementById('t_save').onclick=saveTimeline; document.getElementById('t_clear').onclick=function(){ ['t_title','t_date','t_veh','t_body','t_id'].forEach(function(i){ document.getElementById(i).value=''; }); };
     });
   }
-  function showTLCard(e){ if(!e)return; var c=document.getElementById('tlcard');
-    c.innerHTML='<div class="card"><h3>'+esc(e.title)+'</h3><div class="muted">'+esc(e.entry_date||'')+((e.vehicles&&e.vehicles.length)?' · '+e.vehicles.map(esc).join(', '):'')+'</div><p>'+esc(e.body)+'</p><div class="row"><button class="act ghost" id="tl_edit">Edit</button><button class="act danger" id="tl_del">Delete</button></div></div>';
+  function showTL(e){ if(!e)return; var c=document.getElementById('tlcard');
+    c.innerHTML='<div class="card"><h3 style="margin-top:0">'+esc(e.title)+'</h3><div class="dim small" style="font-family:var(--mono)">'+esc(e.entry_date||'')+((e.vehicles&&e.vehicles.length)?' · '+e.vehicles.map(esc).join(', '):'')+'</div><p>'+esc(e.body)+'</p><div class="row"><button class="act ghost" id="tl_edit">Edit</button><button class="act danger" id="tl_del">Delete</button></div></div>';
     document.getElementById('tl_edit').onclick=function(){ document.getElementById('t_title').value=e.title||''; document.getElementById('t_date').value=e.entry_date||''; document.getElementById('t_veh').value=(e.vehicles||[]).join(','); document.getElementById('t_body').value=e.body||''; document.getElementById('t_id').value=e.id; window.scrollTo(0,document.body.scrollHeight); };
     document.getElementById('tl_del').onclick=function(){ if(!confirm('Delete this entry?'))return; sb.from('timeline').delete().eq('id',e.id).then(function(res){ if(res.error) return status('err',res.error.message); route('timeline'); }); };
   }
-  function saveTimeline(){
-    var id=document.getElementById('t_id').value;
-    var veh=document.getElementById('t_veh').value.split(',').map(function(s){return s.trim();}).filter(Boolean);
+  function saveTimeline(){ var id=document.getElementById('t_id').value; var veh=document.getElementById('t_veh').value.split(',').map(function(s){return s.trim();}).filter(Boolean);
     var rec={ title:document.getElementById('t_title').value, entry_date:document.getElementById('t_date').value||null, vehicles:veh, body:document.getElementById('t_body').value, updated_at:new Date().toISOString() };
     if(!rec.title) return status('err','Title required.');
-    var q = id ? sb.from('timeline').update(rec).eq('id',id) : sb.from('timeline').insert(rec);
-    q.then(function(res){ if(res.error) return status('err',res.error.message); route('timeline'); });
+    var q=id?sb.from('timeline').update(rec).eq('id',id):sb.from('timeline').insert(rec); q.then(function(res){ if(res.error) return status('err',res.error.message); route('timeline'); });
   }
 
-  /* ---------- ARCHITECT ---------- */
   function renderArchitect(){
     if(!needSB()) return;
-    view().innerHTML='<h1>Chief Architect Log</h1><div id="boot">Loading…</div>';
+    paint('<div id="boot">Loading architect log<span class="scanline"></span></div>',false);
     sb.from('architect_log').select('*').order('entry_date',{ascending:false}).then(function(res){
       var data=res.data||[], error=res.error;
-      var h='<h1>Chief Architect Log</h1><p class="muted">Franco\'s own record. Editable, saved to CASTLE\'s database.</p><div id="st" class="status"></div>';
-      h+='<h2>New voice note (local)</h2><div class="row"><button class="act" id="recBtn">● Record</button><span id="recStatus" class="muted"></span></div><div id="recOut"></div>';
-      h+='<h2>Add / edit entry</h2><div class="card"><input id="a_title" placeholder="Title"><input id="a_date" type="date"><textarea id="a_body" rows="4" placeholder="Write your entry"></textarea><input type="hidden" id="a_id"><div class="row"><button class="act" id="a_save">Save</button><button class="act ghost" id="a_clear">Clear</button></div></div>';
-      if(error) h+='<div class="flag">Load error: '+esc(error.message)+'</div>';
+      var h='<p class="eyebrow">Chief Architect</p><h1>Architect Log</h1><p class="dim small">Franco\'s own record. Editable, saved to the database.</p><div id="st" class="status"></div>';
+      h+='<h2>Voice Note (local)</h2><div class="row"><button class="act" id="recBtn">● Record</button><span id="recStatus" class="dim small"></span></div><div id="recOut"></div>';
+      h+='<h2>Add / Edit Entry</h2><div class="card"><input id="a_title" placeholder="Title"><input id="a_date" type="date"><textarea id="a_body" rows="4" placeholder="Write your entry"></textarea><input type="hidden" id="a_id"><div class="row"><button class="act" id="a_save">Save</button><button class="act ghost" id="a_clear">Clear</button></div></div>';
+      if(error) h+='<div class="flag"><div class="fl-body">Load error: '+esc(error.message)+'</div></div>';
       h+='<h2>Entries</h2><div id="alist"></div>';
-      view().innerHTML=h;
+      paint(h,true);
       var list=document.getElementById('alist');
-      data.forEach(function(e){
-        var card=el('<div class="card"><h3>'+esc(e.title)+'</h3><div class="muted">'+esc(e.entry_date||'')+' · '+esc(e.entry_type||'text')+'</div><p>'+esc(e.body)+'</p><div class="row"><button class="act ghost">Edit</button><button class="act danger">Delete</button></div></div>');
-        var btns=card.querySelectorAll('button');
-        btns[0].onclick=function(){ document.getElementById('a_title').value=e.title||''; document.getElementById('a_date').value=e.entry_date||''; document.getElementById('a_body').value=e.body||''; document.getElementById('a_id').value=e.id; window.scrollTo(0,0); };
-        btns[1].onclick=function(){ if(!confirm('Delete this entry?'))return; sb.from('architect_log').delete().eq('id',e.id).then(function(r){ if(r.error) return status('err',r.error.message); route('architect'); }); };
-        list.appendChild(card);
-      });
-      document.getElementById('a_save').onclick=function(){
-        var id=document.getElementById('a_id').value;
-        var rec={ title:document.getElementById('a_title').value, entry_date:document.getElementById('a_date').value||null, body:document.getElementById('a_body').value, entry_type:'text', updated_at:new Date().toISOString() };
-        if(!rec.title) return status('err','Title required.');
-        var q=id? sb.from('architect_log').update(rec).eq('id',id) : sb.from('architect_log').insert(rec);
-        q.then(function(r){ if(r.error) return status('err',r.error.message); route('architect'); });
-      };
+      data.forEach(function(e){ var card=el('<div class="card"><h3 style="margin-top:0">'+esc(e.title)+'</h3><div class="dim small" style="font-family:var(--mono)">'+esc(e.entry_date||'')+' · '+esc(e.entry_type||'text')+'</div><p>'+esc(e.body)+'</p><div class="row"><button class="act ghost">Edit</button><button class="act danger">Delete</button></div></div>');
+        var b=card.querySelectorAll('button');
+        b[0].onclick=function(){ document.getElementById('a_title').value=e.title||''; document.getElementById('a_date').value=e.entry_date||''; document.getElementById('a_body').value=e.body||''; document.getElementById('a_id').value=e.id; window.scrollTo(0,0); };
+        b[1].onclick=function(){ if(!confirm('Delete this entry?'))return; sb.from('architect_log').delete().eq('id',e.id).then(function(r){ if(r.error) return status('err',r.error.message); route('architect'); }); };
+        list.appendChild(card); });
+      document.getElementById('a_save').onclick=function(){ var id=document.getElementById('a_id').value; var rec={ title:document.getElementById('a_title').value, entry_date:document.getElementById('a_date').value||null, body:document.getElementById('a_body').value, entry_type:'text', updated_at:new Date().toISOString() };
+        if(!rec.title) return status('err','Title required.'); var q=id?sb.from('architect_log').update(rec).eq('id',id):sb.from('architect_log').insert(rec); q.then(function(r){ if(r.error) return status('err',r.error.message); route('architect'); }); };
       document.getElementById('a_clear').onclick=function(){ ['a_title','a_date','a_body','a_id'].forEach(function(i){ document.getElementById(i).value=''; }); };
-      wireRecorder();
+      wireRec();
     });
   }
-  function wireRecorder(){
-    var btn=document.getElementById('recBtn'); if(!btn)return;
-    var st=document.getElementById('recStatus'), out=document.getElementById('recOut'), mr, chunks=[], rec=false;
-    btn.onclick=function(){
-      if(!rec){ navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){ mr=new MediaRecorder(stream); chunks=[]; mr.ondataavailable=function(e){ chunks.push(e.data); }; mr.onstop=function(){ var url=URL.createObjectURL(new Blob(chunks,{type:'audio/webm'})); out.innerHTML='<audio controls src="'+url+'" style="width:100%;margin-top:8px"></audio><p class="muted">Recorded locally. Uploading audio is a later pass.</p>'; }; mr.start(); rec=true; btn.textContent='■ Stop'; st.textContent='recording…'; }).catch(function(e){ st.textContent='mic unavailable: '+e.message; });
-      } else { mr.stop(); rec=false; btn.textContent='● Record'; st.textContent='saved below'; }
-    };
+  function wireRec(){ var btn=document.getElementById('recBtn'); if(!btn)return; var st=document.getElementById('recStatus'), out=document.getElementById('recOut'), mr, chunks=[], rec=false;
+    btn.onclick=function(){ if(!rec){ navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){ mr=new MediaRecorder(stream); chunks=[]; mr.ondataavailable=function(e){chunks.push(e.data);}; mr.onstop=function(){ var url=URL.createObjectURL(new Blob(chunks,{type:'audio/webm'})); out.innerHTML='<audio controls src="'+url+'" style="width:100%;margin-top:8px"></audio><p class="dim small">Recorded locally. Uploading audio is a later pass.</p>'; }; mr.start(); rec=true; btn.textContent='■ Stop'; st.textContent='recording…'; }).catch(function(e){ st.textContent='mic unavailable: '+e.message; }); } else { mr.stop(); rec=false; btn.textContent='● Record'; st.textContent='saved below'; } };
   }
 
-  /* ---------- PHOTOS ---------- */
   function renderPhotos(){
     if(!needSB()) return;
-    view().innerHTML='<h1>Photos</h1><div id="boot">Loading…</div>';
+    paint('<div id="boot">Loading gallery<span class="scanline"></span></div>',false);
     sb.from('photos').select('*').order('created_at',{ascending:false}).then(function(res){
       var data=res.data||[], error=res.error;
-      var h='<h1>Photos</h1><p class="muted">Photo metadata saved to CASTLE\'s database. Image file upload to storage is a later pass; preview is local.</p><div id="st" class="status"></div>';
+      var h='<p class="eyebrow">Archive</p><h1>Photos</h1><p class="dim small">Metadata saved to the database. Image-file upload to storage is a later pass; preview is local.</p><div id="st" class="status"></div>';
       h+='<div class="card"><input type="file" id="pf" accept="image/*"><input id="pt" placeholder="Title"><input id="pd" type="date"><input id="pvid" placeholder="Vehicle id (optional)"><textarea id="pdesc" rows="2" placeholder="Description"></textarea><button class="act" id="padd">Save entry</button></div><div id="plist"></div>';
-      if(error) h+='<div class="flag">'+esc(error.message)+'</div>';
-      view().innerHTML=h;
+      if(error) h+='<div class="flag"><div class="fl-body">'+esc(error.message)+'</div></div>';
+      paint(h,true);
       var list=document.getElementById('plist');
-      data.forEach(function(e){ list.appendChild(el('<div class="card"><h3>'+esc(e.title)+'</h3><div class="muted">'+esc(e.entry_date||'')+(e.vehicle_id?' · '+esc(e.vehicle_id):'')+'</div><p>'+esc(e.description)+'</p></div>')); });
-      document.getElementById('padd').onclick=function(){
-        var f=document.getElementById('pf').files[0], preview='';
-        if(f){ preview='<img src="'+URL.createObjectURL(f)+'" style="max-width:100%;border-radius:6px">'; }
+      data.forEach(function(e){ list.appendChild(el('<div class="card"><h3 style="margin-top:0">'+esc(e.title)+'</h3><div class="dim small" style="font-family:var(--mono)">'+esc(e.entry_date||'')+(e.vehicle_id?' · '+esc(e.vehicle_id):'')+'</div><p>'+esc(e.description)+'</p></div>')); });
+      document.getElementById('padd').onclick=function(){ var f=document.getElementById('pf').files[0], preview=''; if(f){ preview='<img src="'+URL.createObjectURL(f)+'" style="max-width:100%;border-radius:6px">'; }
         var rec={ title:document.getElementById('pt').value||'(untitled)', entry_date:document.getElementById('pd').value||null, vehicle_id:document.getElementById('pvid').value||null, description:document.getElementById('pdesc').value||'' };
-        sb.from('photos').insert(rec).then(function(r){ if(r.error) return status('err',r.error.message);
-          list.insertBefore(el('<div class="card">'+preview+'<h3>'+esc(rec.title)+'</h3><div class="muted">'+esc(rec.entry_date||'')+'</div><p>'+esc(rec.description)+'</p></div>'), list.firstChild); status('ok','Saved.'); });
-      };
+        sb.from('photos').insert(rec).then(function(r){ if(r.error) return status('err',r.error.message); list.insertBefore(el('<div class="card">'+preview+'<h3 style="margin-top:0">'+esc(rec.title)+'</h3><div class="dim small">'+esc(rec.entry_date||'')+'</div><p>'+esc(rec.description)+'</p></div>'), list.firstChild); status('ok','Saved.'); }); };
     });
   }
 
-  /* ---------- BACKUP ---------- */
   function renderData(){
-    var h='<h1>Backup</h1><p class="muted">Export the database-stored logs (architect, timeline, photos) to a file.</p><button class="act" id="exp">Export logs</button><div id="st" class="status"></div><h2>Repo data</h2><p class="muted">Vehicles and reports live in the GitHub repo as JSON. This backup covers the app-editable logs.</p>';
-    view().innerHTML=h;
-    document.getElementById('exp').onclick=function(){
-      if(!sb) return status('err', sbError||'no database');
+    var h='<p class="eyebrow">Maintenance</p><h1>Backup</h1><p class="dim small">Export the database logs (architect, timeline, photos).</p><button class="act" id="exp">Export logs</button><div id="st" class="status"></div>';
+    h+='<h2>Repo Data</h2><p class="dim small">Vehicles and reports live in the GitHub repo as JSON. This backup covers the app-editable logs.</p>';
+    paint(h,true);
+    document.getElementById('exp').onclick=function(){ if(!sb) return status('err',sbError||'no database');
       Promise.all([sb.from('architect_log').select('*'),sb.from('timeline').select('*'),sb.from('photos').select('*')]).then(function(rs){
         var dump={ architect_log:rs[0].data||[], timeline:rs[1].data||[], photos:rs[2].data||[], exported:new Date().toISOString() };
-        var url=URL.createObjectURL(new Blob([JSON.stringify(dump,null,2)],{type:'application/json'}));
-        var a=document.createElement('a'); a.href=url; a.download='castle-logs-backup.json'; a.click(); status('ok','Exported.');
-      });
-    };
+        var a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(dump,null,2)],{type:'application/json'})); a.download='castle-logs-backup.json'; a.click(); status('ok','Exported.'); }); };
   }
 
   if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(function(){}); }
