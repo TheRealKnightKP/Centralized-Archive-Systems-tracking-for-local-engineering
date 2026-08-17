@@ -147,13 +147,23 @@
   .chip{ font-family:var(--mono); font-size:11px; background:var(--navy-lo); border:1px solid var(--navy-hi); border-radius:14px; padding:5px 11px; color:#bcd6ef; }
 
   /* ---- horizontal timeline: a museum rail ---- */
-  .tl-rail{ display:flex; overflow-x:auto; padding:34px 6px 16px; position:relative; scrollbar-width:thin; }
-  .tl-rail::before{ content:''; position:absolute; left:0; right:0; top:48px; height:2px; background:linear-gradient(90deg,transparent,var(--navy-hi) 8%,var(--navy-hi) 92%,transparent); }
+  .tl-rail{ display:flex; overflow-x:auto; padding:34px 6px 16px; position:relative; scrollbar-width:thin; width:max-content; min-width:100%; }
+  .tl-rail::before{ content:''; position:absolute; left:12px; right:12px; top:48px; height:2px; background:linear-gradient(90deg,transparent,var(--navy-hi) 4%,var(--navy-hi) 96%,transparent); }
   .tl-node{ min-width:158px; position:relative; padding:0 12px; cursor:pointer; }
   .tl-dot{ width:15px; height:15px; border-radius:50%; background:var(--navy); border:2px solid var(--orange); margin:0 auto 10px; box-shadow:0 0 0 4px rgba(11,18,25,1),0 0 10px rgba(227,154,28,.4); transition:.15s; }
   .tl-node:hover .tl-dot{ background:var(--orange); transform:scale(1.15); }
   .tl-date{ text-align:center; font-family:var(--mono); font-size:10px; color:var(--orange); margin-bottom:3px; letter-spacing:.5px; }
   .tl-title{ text-align:center; font-size:12px; color:var(--text); line-height:1.35; }
+  .tl-wrap{ overflow-x:auto; }
+
+  /* ---- flying Pauldron loader ---- */
+  .loader{ display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 0; }
+  .flypath{ position:relative; width:100%; max-width:520px; height:70px; overflow:hidden; }
+  .pauldron{ position:absolute; top:20px; left:-40px; animation:fly 1.5s linear infinite; }
+  @keyframes fly{ from{ transform:translateX(0); } to{ transform:translateX(calc(100vw + 80px)); } }
+  .ptrail{ position:absolute; top:34px; height:4px; width:60px; border-radius:2px;
+    background:linear-gradient(90deg, transparent, rgba(227,154,28,.7)); animation:fly 1.5s linear infinite; }
+  .loadtxt{ font-family:var(--mono); font-size:11px; color:var(--dim); margin-top:14px; letter-spacing:1px; }
 
   /* ---- blueprint draw-on animation ---- */
   @keyframes drawin{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:translateY(0); } }
@@ -181,7 +191,7 @@
 <script>
 (function(){
   "use strict";
-  var VERSION='v4';
+  var VERSION='v5';
   var SUPABASE_URL='https://tvlkxrqrwjgfivwsbniu.supabase.co';
   var SUPABASE_KEY='sb_publishable_Y9rEqbltp4G7BL0OjqxIQw_cj0v0INi';
   var DATA_BASE='./data';
@@ -190,7 +200,7 @@
   try{ if(window.supabase&&window.supabase.createClient){ sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY); } else { sbError='Supabase library did not load (CDN blocked or offline).'; } }
   catch(e){ sbError='Supabase init failed: '+(e&&e.message?e.message:e); }
 
-  var state={ index:null, reports:null, vehicles:{} };
+  var state={ index:null, reports:null, vehicles:{}, fleetList:null };
   function el(h){ var t=document.createElement('template'); t.innerHTML=(h||'').trim(); return t.content.firstChild; }
   function esc(s){ return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
   function view(){ return document.getElementById('view'); }
@@ -198,14 +208,51 @@
   function fail(m){ paint('<div class="flag"><div class="fl-body">'+esc(m)+'</div></div>',false); }
   function loadJSON(p){ return fetch(p,{cache:'no-store'}).then(function(r){ if(!r.ok) throw new Error(p+' → HTTP '+r.status); return r.json(); }); }
 
+  // Flying-Pauldron loader (Franco's reference: trapezoid nose, blue 3-section body, grey base module, 2 triangle fins, 3 engine trapezoids)
+  function pauldronSVG(){
+    return '<svg width="34" height="60" viewBox="0 0 34 60">'
+      +'<polygon points="10,2 24,2 21,10 13,10" fill="#8a97a6" stroke="#0a1119" stroke-width="1.5"/>'
+      +'<rect x="11" y="10" width="12" height="12" fill="#3a4a63" stroke="#0a1119" stroke-width="1.5"/>'
+      +'<rect x="11" y="22" width="12" height="12" fill="#3a4a63" stroke="#0a1119" stroke-width="1.5"/>'
+      +'<rect x="11" y="34" width="12" height="12" fill="#3a4a63" stroke="#0a1119" stroke-width="1.5"/>'
+      +'<rect x="10" y="46" width="14" height="6" fill="#6b7787" stroke="#0a1119" stroke-width="1.5"/>'
+      +'<polygon points="11,44 4,54 11,54" fill="#54627a" stroke="#0a1119" stroke-width="1.5"/>'
+      +'<polygon points="23,44 30,54 23,54" fill="#54627a" stroke="#0a1119" stroke-width="1.5"/>'
+      +'<polygon points="12,52 15,58 12,58" fill="#2a3444" stroke="#0a1119" stroke-width="1"/>'
+      +'<polygon points="16,52 18,58 16,58" fill="#2a3444" stroke="#0a1119" stroke-width="1"/>'
+      +'<polygon points="20,52 22,58 20,58" fill="#2a3444" stroke="#0a1119" stroke-width="1"/>'
+      +'</svg>';
+  }
+  function loader(msg){ return '<div class="loader"><div class="flypath"><span class="ptrail"></span><span class="pauldron" style="transform:rotate(90deg)">'+pauldronSVG()+'</span></div><div class="loadtxt">'+esc(msg||'LOADING')+'</div></div>'; }
+
   // class → accent color for station strips / stamps
   var CLASS_COLOR={ EX:'#4fd08a', VX:'#57b6e6', LX:'#E39A1C', TX:'#c98a5a', GX:'#b57de0', DX:'#e0687d', MX:'#7de0c8', RX:'#e0d267' };
   function cc(cls){ return CLASS_COLOR[cls]||'#8ea3b6'; }
 
+  // One-time seed: if Supabase vehicles table is empty, import full data from repo JSON.
+  function ensureSeed(){
+    if(!sb) return Promise.resolve();
+    return sb.from('vehicles').select('id',{count:'exact',head:true}).then(function(res){
+      if(res.error) throw res.error;
+      if((res.count||0)>0) return;
+      return loadJSON(DATA_BASE+'/index.json').then(function(ix){
+        var order=['ex1','ex2','ex3','ex4','vx11','vx12','vx13','vx14','lx21','lx22','lx23','lx24','gx04','tx03','tx04','mx72','mx74','mx77','mx79','dx91','dx92','dx93','dx94'];
+        return Promise.all(ix.vehicles.map(function(v){
+          return loadJSON(DATA_BASE+'/vehicles/'+v.id+'.json').then(function(d){
+            var core={specs:d.specs||{},components:d.components||[],capabilities:d.capabilities||[],modules:d.modules||[],calculations:d.calculations||[],blueprint:d.blueprint||{},comparisons:d.comparisons||[],sections:d.sections||[],decisions:d.decisions||[],openItems:d.openItems||[],changelog:d.changelog||[],icon:d.icon||null,views:d.views||{},missionSequence:d.missionSequence||[]};
+            return { id:d.id,name:d.name||'',designation:d.designation||'',class:d.class||'',class_quality:d.classQuality||'',role:d.role||'',status:d.status||'concept',summary:d.summary||'',description:d.description||'',data:core,sort:(order.indexOf(d.id)<0?100:order.indexOf(d.id)) };
+          }).catch(function(){ return null; });
+        })).then(function(rows){ return sb.from('vehicles').insert(rows.filter(Boolean)); })
+        .then(function(){ return loadJSON(DATA_BASE+'/reports.json').catch(function(){return {reports:[]};}); })
+        .then(function(rep){ var rows=(rep.reports||[]).map(function(r){ return { id:r.id,title:r.title||'',report_date:r.date||null,author:r.author||'Claude',vehicles:r.vehicles||[],body:r.body||'' }; }); if(rows.length) return sb.from('reports').insert(rows); });
+      });
+    }).catch(function(e){ console.warn('seed skipped:',e&&e.message); });
+  }
+
   function boot(){
-    loadJSON(DATA_BASE+'/index.json').then(function(ix){ state.index=ix; return loadJSON(DATA_BASE+'/reports.json').catch(function(){return {reports:[]};}); })
-    .then(function(rep){ state.reports=rep; document.getElementById('hver').textContent=VERSION; buildNav(); route('fleet'); })
-    .catch(function(e){ fail('Could not load '+DATA_BASE+'/index.json — '+(e&&e.message?e.message:e)+'. Check the data/ folder is in the repo.'); });
+    loadJSON(DATA_BASE+'/index.json').then(function(ix){ state.index=ix; return ensureSeed(); })
+    .then(function(){ document.getElementById('hver').textContent=VERSION; buildNav(); route('fleet'); })
+    .catch(function(e){ fail('Could not initialize — '+(e&&e.message?e.message:e)); });
   }
 
   var TABS=[['fleet','Fleet'],['ifo','IFO'],['reports','Reports'],['timeline','Timeline'],['architect','Architect'],['photos','Photos'],['data','Backup']];
@@ -221,50 +268,61 @@
     if(tab==='data') return renderData();
   }catch(e){ fail('Error rendering "'+tab+'": '+(e&&e.message?e.message:e)); } }
 
-  /* ---------- station strip from blueprint (rough, decorative-but-real) ---------- */
+ /* ---------- station strip from blueprint (rough, decorative-but-real) ---------- */
   function stationStrip(d){
-    // Use component/section count as proxy segments; color by class. Purely visual, from real structure.
-    var segs=[];
-    var base=cc(d.class);
-    var n=(d.components&&d.components.length)|| (d.sections&&d.sections.length) || 5;
+    var segs=[]; var base=cc(d.class);
+    var n = d._components || (d.data&&d.data.components&&d.data.components.length) || (d.components&&d.components.length) || 5;
     n=Math.max(4,Math.min(9,n));
     for(var i=0;i<n;i++){ var w=6+((i*37)%22); segs.push('<div class="ss-seg" style="width:'+w+'%;background:'+(i%3===0?base:'#2a3e50')+';opacity:'+(0.5+((i%3)*0.2))+'"></div>'); }
-    // nose cap
     segs.push('<div class="ss-seg" style="width:10px;height:0;border-left:9px solid '+base+';border-top:5px solid transparent;border-bottom:5px solid transparent;background:none"></div>');
     return '<div class="station-strip">'+segs.join('')+'</div>';
   }
 
   /* ---------- FLEET ---------- */
   function renderFleet(){
-    var ix=state.index, byClass={};
-    ix.vehicles.forEach(function(x){ (byClass[x.class]=byClass[x.class]||[]).push(x); });
-    var h='<p class="eyebrow">KnightShip Aerospace · Fleet Registry</p>';
-    h+='<h1>'+esc(ix.castle.company)+'</h1><p class="dim small">'+esc(ix.castle.motto)+'</p>';
-    var order=['EX','VX','LX','GX','TX','MX','DX','RX'];
-    var classes=Object.keys(byClass).sort(function(a,b){ return (order.indexOf(a)+99)%100-(order.indexOf(b)+99)%100; });
-    classes.forEach(function(cls){
-      var q=(ix.taxonomy.classes.filter(function(c){return c.code===cls[0];})[0]||{}).name||'';
-      h+='<h2>'+esc(cls)+' — '+esc(q)+'</h2>';
-      byClass[cls].forEach(function(x){
-        h+='<div class="plate-card" data-id="'+esc(x.id)+'">'
-          +'<div class="pc-top"><div class="pc-stamp" style="color:'+cc(cls)+'">'+esc(x.class)+'</div>'
-          +'<div class="pc-main"><div class="pc-desig">'+esc(x.designation)+'</div>'
-          +'<div class="pc-role">'+esc(x.role)+'</div>'
-          +'<div style="margin-top:7px"><span class="pc-status '+esc(x.status)+'">'+esc(x.status)+'</span></div></div></div>'
-          + stationStrip(x.id?(state.vehicles[x.id]||x):x)
-          +'</div>';
+    // Fleet list from Supabase (falls back to repo index if DB unavailable).
+    var draw=function(list){
+      state.fleetList=list;
+      var ix=state.index, byClass={};
+      list.forEach(function(x){ (byClass[x.class]=byClass[x.class]||[]).push(x); });
+      var h='<p class="eyebrow">KnightShip Aerospace · Fleet Registry</p>';
+      h+='<h1>'+esc(ix.castle.company)+'</h1><p class="dim small">'+esc(ix.castle.motto)+'</p>';
+      var order=['EX','VX','LX','GX','TX','MX','DX','RX'];
+      var classes=Object.keys(byClass).sort(function(a,b){ return (order.indexOf(a)+99)%100-(order.indexOf(b)+99)%100; });
+      classes.forEach(function(cls){
+        var q=(ix.taxonomy.classes.filter(function(c){return c.code===cls[0];})[0]||{}).name||'';
+        h+='<h2>'+esc(cls)+' — '+esc(q)+'</h2>';
+        byClass[cls].forEach(function(x){
+          h+='<div class="plate-card" data-id="'+esc(x.id)+'">'
+            +'<div class="pc-top"><div class="pc-stamp" style="color:'+cc(cls)+'">'+esc(x.class)+'</div>'
+            +'<div class="pc-main"><div class="pc-desig">'+esc(x.designation)+'</div>'
+            +'<div class="pc-role">'+esc(x.role)+'</div>'
+            +'<div style="margin-top:7px"><span class="pc-status '+esc(x.status)+'">'+esc(x.status)+'</span></div></div></div>'
+            + stationStrip(x)
+            +'</div>';
+        });
       });
+      h+='<h2>Class Taxonomy</h2><div class="readout">';
+      ix.taxonomy.classes.forEach(function(c){ h+='<div><span class="rv" style="color:'+cc(c.code+'X')+'">'+esc(c.code)+'X</span> <span class="rk">'+esc(c.name)+'</span> — '+esc(c.desc)+'</div>'; });
+      h+='</div><p class="dim small">'+esc(ix.taxonomy.note)+'</p>';
+      paint(h,true);
+      Array.prototype.forEach.call(view().querySelectorAll('.plate-card'),function(c){ c.onclick=function(){ route('fleet',c.dataset.id); }; });
+    };
+    if(state.fleetList) return draw(state.fleetList);
+    if(!sb) return draw(state.index.vehicles); // fallback to repo index list
+    paint(loader('RETRIEVING FLEET'),false);
+    sb.from('vehicles').select('id,designation,class,class_quality,role,status,data').order('sort',{ascending:true}).then(function(res){
+      if(res.error||!res.data||!res.data.length) return draw(state.index.vehicles);
+      var list=res.data.map(function(r){ r.classQuality=r.class_quality; return r; });
+      // cache component counts for station strips
+      list.forEach(function(r){ state.vehicles[r.id]=state.vehicles[r.id]||{}; if(r.data) state.vehicles[r.id]._components=(r.data.components||[]).length; });
+      draw(list);
     });
-    h+='<h2>Class Taxonomy</h2><div class="readout">';
-    ix.taxonomy.classes.forEach(function(c){ h+='<div><span class="rv" style="color:'+cc(c.code+'X')+'">'+esc(c.code)+'X</span> <span class="rk">'+esc(c.name)+'</span> — '+esc(c.desc)+'</div>'; });
-    h+='</div><p class="dim small">'+esc(ix.taxonomy.note)+'</p>';
-    paint(h,true);
-    Array.prototype.forEach.call(view().querySelectorAll('.plate-card'),function(c){ c.onclick=function(){ route('fleet',c.dataset.id); }; });
   }
 
   /* ---------- VEHICLE ---------- */
   function renderVehicle(id){
-    paint('<div id="boot">Retrieving '+esc(id)+' record<span class="scanline"></span></div>',false);
+    paint(loader('RETRIEVING '+id.toUpperCase()),false);
     var render=function(d){
       state.vehicles[id]=d; var s=d.specs||{};
       var h='<span class="back">◂ RETURN TO REGISTRY</span>';
@@ -272,37 +330,42 @@
       h+='<h1>'+esc(d.designation)+'</h1>';
       h+='<div class="row" style="margin:6px 0 2px"><span class="stamp" style="border-color:'+cc(d.class)+';color:'+cc(d.class)+'">'+esc(d.class)+'-CLASS</span><span class="stamp '+(d.status==='teased'?'orange':'')+'">'+esc(d.status)+'</span></div>';
       h+='<p>'+esc(d.description||d.summary)+'</p>';
-
-      // Specs as instrument readout
       h+='<h2>Specification</h2><div class="readout">';
       var any=false;
       for(var k in s){ if(s.hasOwnProperty(k)&&typeof s[k]!=='object'){ h+='<div><span class="rk">'+esc(pad(k))+'</span>  <span class="rv">'+esc(s[k])+'</span></div>'; any=true; } }
       if(!any) h+='<div class="rk">— not yet worked —</div>';
       h+='</div>';
       if(s.deltaV){ h+='<h3>Δv Budget</h3><div class="readout">'; for(var kk in s.deltaV){ if(s.deltaV.hasOwnProperty(kk)) h+='<div><span class="rk">'+esc(pad(kk))+'</span>  <span class="rv">'+esc(s.deltaV[kk])+'</span></div>'; } h+='</div>'; }
-
       h+=listBlock('Components',d.components,function(c){ return '<b style="color:#fff">'+esc(c.name)+'</b> — '+esc(c.what)+'<div class="dim small" style="font-family:var(--mono)">'+esc(c.location||'')+(c.detail?' · '+esc(c.detail):'')+'</div>'; });
       h+=listBlock('Capabilities',d.capabilities,function(c){ return '<b style="color:#fff">'+esc(c.name)+'</b><div class="dim small">'+esc(c.detail)+'</div>'; });
       h+=listBlock('Modules',d.modules,function(m){ return '<b style="color:#fff">'+esc(m.name)+'</b>'+(m.mass_t?' <span class="dim">('+esc(m.mass_t)+' t)</span>':'')+'<div class="dim small">'+esc(m.purpose)+'</div>'; });
-
       if(d.calculations&&d.calculations.length){ h+='<h2>Calculations</h2>'; d.calculations.forEach(function(c){ h+='<h3>'+esc(c.title)+'</h3><div class="readout"><div><span class="rk">method</span>  '+esc(c.method)+'</div><div><span class="rk">result</span>  <span class="rv">'+esc(c.result)+'</span></div>'+(c.note?'<div><span class="rk">note  </span>  '+esc(c.note)+'</div>':'')+'</div>'; }); }
-
       if(d.sections&&d.sections.length){ h+='<h2>Technical Detail</h2>'; d.sections.forEach(function(x){ h+= x.flag?'<div class="flag"><div class="fl-body"><b style="color:var(--orange)">'+esc(x.heading)+'</b><br>'+esc(x.body)+'</div></div>':'<h3>'+esc(x.heading)+'</h3><p>'+esc(x.body)+'</p>'; }); }
-
-      if(d.blueprint){ h+='<h2>Blueprint</h2><div class="readout">'+esc(d.blueprint.frame)+'\n\n'+esc(d.blueprint.stations)+(d.blueprint.notes?'\n\n'+esc(d.blueprint.notes):'')+'</div>'; }
-
+      if(d.blueprint && (d.blueprint.frame||d.blueprint.stations)){
+        h+='<h2>Blueprint</h2><div class="card" style="padding:0"><button class="act ghost" id="bpToggle" style="width:100%;text-align:left;margin:0;border:none;border-radius:9px">▸ Show blueprint</button><div id="bpBody" style="display:none;padding:0 4px 4px"><div class="readout">'+esc(d.blueprint.frame||'')+(d.blueprint.stations?'\n\n'+esc(d.blueprint.stations):'')+(d.blueprint.notes?'\n\n'+esc(d.blueprint.notes):'')+'</div></div></div>';
+      }
       if(d.comparisons&&d.comparisons.length){ h+='<h2>Comparison</h2>'; d.comparisons.forEach(function(c){ h+='<h3>vs '+esc(c.against)+' <span class="dim small">('+esc(c.type)+')</span></h3><table><tr><th></th><th>'+esc(d.designation)+'</th><th>'+esc(c.against)+'</th></tr>'; c.rows.forEach(function(r){ h+='<tr><td class="dim">'+esc(r.label)+'</td><td>'+esc(r.this)+'</td><td>'+esc(r.other)+'</td></tr>'; }); h+='</table>'; }); }
-
       if(d.decisions&&d.decisions.length){ h+='<h2>Design Decisions</h2>'; d.decisions.forEach(function(x){ h+='<div class="rev"><span class="rev-what">'+esc(x.chose)+'</span><span class="rev-date">CHOSEN</span><span class="rev-why">over '+esc(x.over)+' — '+esc(x.why)+'</span></div>'; }); }
-
       if(d.openItems&&d.openItems.length){ h+='<h2>Open Items</h2>'; d.openItems.forEach(function(o){ h+='<div class="flag"><div class="fl-body">'+esc(o)+'</div></div>'; }); }
-
       if(d.changelog&&d.changelog.length){ h+='<h2>Revision History</h2>'; d.changelog.forEach(function(c){ h+='<div class="rev"><span class="rev-date">'+esc(c.date)+'</span><span class="rev-what">'+esc(c.what)+'</span><span class="rev-why">'+esc(c.why)+'</span></div>'; }); }
-
-      paint(h,true); view().querySelector('.back').onclick=function(){ route('fleet'); };
+      paint(h,true);
+      view().querySelector('.back').onclick=function(){ route('fleet'); };
+      var bt=document.getElementById('bpToggle');
+      if(bt){ bt.onclick=function(){ var b=document.getElementById('bpBody'); var open=b.style.display!=='none'; b.style.display=open?'none':'block'; bt.textContent=(open?'▸ Show blueprint':'▾ Hide blueprint'); }; }
     };
-    if(state.vehicles[id]) return render(state.vehicles[id]);
-    loadJSON(DATA_BASE+'/vehicles/'+id+'.json').then(render).catch(function(e){ paint('<span class="back">◂ RETURN</span><div class="flag"><div class="fl-body">Could not load '+esc(id)+' — '+esc(e.message)+'</div></div>',false); view().querySelector('.back').onclick=function(){ route('fleet'); }; });
+    // From cache?
+    if(state.vehicles[id] && state.vehicles[id].designation) return render(state.vehicles[id]);
+    // From Supabase
+    if(sb){
+      sb.from('vehicles').select('*').eq('id',id).single().then(function(res){
+        if(res.error||!res.data) return fromRepo();
+        var r=res.data, core=r.data||{};
+        var d={ id:r.id,name:r.name,designation:r.designation,class:r.class,classQuality:r.class_quality,role:r.role,status:r.status,summary:r.summary,description:r.description };
+        ['specs','components','capabilities','modules','calculations','blueprint','comparisons','sections','decisions','openItems','changelog','icon','views','missionSequence'].forEach(function(k){ d[k]=core[k]; });
+        render(d);
+      });
+    } else { fromRepo(); }
+    function fromRepo(){ loadJSON(DATA_BASE+'/vehicles/'+id+'.json').then(render).catch(function(e){ paint('<span class="back">◂ RETURN</span><div class="flag"><div class="fl-body">Could not load '+esc(id)+' — '+esc(e.message)+'</div></div>',false); view().querySelector('.back').onclick=function(){ route('fleet'); }; }); }
   }
   function pad(k){ k=String(k); while(k.length<16) k+=' '; return k; }
   function listBlock(t,a,f){ if(!a||!a.length) return ''; var h='<h2>'+esc(t)+'</h2>'; a.forEach(function(o){ h+='<div class="card" style="padding:10px 12px">'+f(o)+'</div>'; }); return h; }
@@ -321,11 +384,18 @@
 
   /* ---------- REPORTS ---------- */
   function renderReports(){
-    var r=(state.reports&&state.reports.reports)||[];
-    var h='<p class="eyebrow">Engineering Log</p><h1>Reports</h1><p class="dim small">Session records from the repo. Read-only audit trail.</p>';
-    if(!r.length) h+='<div class="ph">NO REPORTS ON FILE</div>';
-    r.forEach(function(x){ h+='<div class="card"><h3 style="margin-top:0">'+esc(x.title)+'</h3><div class="dim small" style="font-family:var(--mono)">'+esc(x.date)+' · '+esc(x.author||'Claude')+' · '+((x.vehicles||[]).map(esc).join(', '))+'</div><p>'+esc(x.body)+'</p></div>'; });
-    paint(h,true);
+    var draw=function(list){
+      var h='<p class="eyebrow">Engineering Log</p><h1>Reports</h1><p class="dim small">Session records. Read-only audit trail.</p>';
+      if(!list.length) h+='<div class="ph">NO REPORTS ON FILE</div>';
+      list.forEach(function(x){ h+='<div class="card"><h3 style="margin-top:0">'+esc(x.title)+'</h3><div class="dim small" style="font-family:var(--mono)">'+esc(x.date||x.report_date||'')+' · '+esc(x.author||'Claude')+' · '+((x.vehicles||[]).map(esc).join(', '))+'</div><p>'+esc(x.body)+'</p></div>'; });
+      paint(h,true);
+    };
+    if(!sb){ return draw((state.reports&&state.reports.reports)||[]); }
+    paint(loader('LOADING REPORTS'),false);
+    sb.from('reports').select('*').order('report_date',{ascending:false}).then(function(res){
+      if(res.error||!res.data) return draw((state.reports&&state.reports.reports)||[]);
+      draw(res.data);
+    });
   }
 
   /* ---------- SUPABASE-BACKED ---------- */
@@ -334,7 +404,7 @@
 
   function renderTimeline(){
     if(!needSB()) return;
-    paint('<div id="boot">Loading timeline<span class="scanline"></span></div>',false);
+    paint(loader('LOADING TIMELINE'),false);
     sb.from('timeline').select('*').order('entry_date',{ascending:true}).then(function(res){
       var data=res.data||[], error=res.error;
       var h='<p class="eyebrow">Program History</p><h1>Timeline</h1><div id="st" class="status"></div>';
@@ -359,7 +429,7 @@
 
   function renderArchitect(){
     if(!needSB()) return;
-    paint('<div id="boot">Loading architect log<span class="scanline"></span></div>',false);
+    paint(loader('LOADING ARCHITECT LOG'),false);
     sb.from('architect_log').select('*').order('entry_date',{ascending:false}).then(function(res){
       var data=res.data||[], error=res.error;
       var h='<p class="eyebrow">Chief Architect</p><h1>Architect Log</h1><p class="dim small">Franco\'s own record. Editable, saved to the database.</p><div id="st" class="status"></div>';
@@ -386,18 +456,25 @@
 
   function renderPhotos(){
     if(!needSB()) return;
-    paint('<div id="boot">Loading gallery<span class="scanline"></span></div>',false);
+    paint(loader('LOADING GALLERY'),false);
     sb.from('photos').select('*').order('created_at',{ascending:false}).then(function(res){
       var data=res.data||[], error=res.error;
-      var h='<p class="eyebrow">Archive</p><h1>Photos</h1><p class="dim small">Metadata saved to the database. Image-file upload to storage is a later pass; preview is local.</p><div id="st" class="status"></div>';
-      h+='<div class="card"><input type="file" id="pf" accept="image/*"><input id="pt" placeholder="Title"><input id="pd" type="date"><input id="pvid" placeholder="Vehicle id (optional)"><textarea id="pdesc" rows="2" placeholder="Description"></textarea><button class="act" id="padd">Save entry</button></div><div id="plist"></div>';
+      var h='<p class="eyebrow">Archive</p><h1>Photos</h1><p class="dim small">Images upload to CASTLE storage and display here.</p><div id="st" class="status"></div>';
+      h+='<div class="card"><input type="file" id="pf" accept="image/*"><input id="pt" placeholder="Title"><input id="pd" type="date"><input id="pvid" placeholder="Vehicle id (optional)"><textarea id="pdesc" rows="2" placeholder="Description"></textarea><button class="act" id="padd">Upload</button> <span id="upst" class="dim small"></span></div><div id="plist"></div>';
       if(error) h+='<div class="flag"><div class="fl-body">'+esc(error.message)+'</div></div>';
       paint(h,true);
       var list=document.getElementById('plist');
-      data.forEach(function(e){ list.appendChild(el('<div class="card"><h3 style="margin-top:0">'+esc(e.title)+'</h3><div class="dim small" style="font-family:var(--mono)">'+esc(e.entry_date||'')+(e.vehicle_id?' · '+esc(e.vehicle_id):'')+'</div><p>'+esc(e.description)+'</p></div>')); });
-      document.getElementById('padd').onclick=function(){ var f=document.getElementById('pf').files[0], preview=''; if(f){ preview='<img src="'+URL.createObjectURL(f)+'" style="max-width:100%;border-radius:6px">'; }
+      function photoCard(e){ var img=e.image_url?'<img src="'+esc(e.image_url)+'" style="max-width:100%;border-radius:6px;margin-bottom:8px">':''; return el('<div class="card">'+img+'<h3 style="margin-top:0">'+esc(e.title)+'</h3><div class="dim small" style="font-family:var(--mono)">'+esc(e.entry_date||'')+(e.vehicle_id?' · '+esc(e.vehicle_id):'')+'</div><p>'+esc(e.description)+'</p></div>'); }
+      data.forEach(function(e){ list.appendChild(photoCard(e)); });
+      document.getElementById('padd').onclick=function(){
+        var f=document.getElementById('pf').files[0];
         var rec={ title:document.getElementById('pt').value||'(untitled)', entry_date:document.getElementById('pd').value||null, vehicle_id:document.getElementById('pvid').value||null, description:document.getElementById('pdesc').value||'' };
-        sb.from('photos').insert(rec).then(function(r){ if(r.error) return status('err',r.error.message); list.insertBefore(el('<div class="card">'+preview+'<h3 style="margin-top:0">'+esc(rec.title)+'</h3><div class="dim small">'+esc(rec.entry_date||'')+'</div><p>'+esc(rec.description)+'</p></div>'), list.firstChild); status('ok','Saved.'); }); };
+        var up=document.getElementById('upst');
+        var doInsert=function(url){ rec.image_url=url||null; sb.from('photos').insert(rec).select().then(function(r){ if(r.error) return status('err',r.error.message); var row=(r.data&&r.data[0])||rec; list.insertBefore(photoCard(row), list.firstChild); status('ok','Saved.'); up.textContent=''; document.getElementById('pt').value=''; document.getElementById('pdesc').value=''; document.getElementById('pf').value=''; }); };
+        if(f){ up.textContent='uploading…'; var path=Date.now()+'_'+f.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+          sb.storage.from('photos').upload(path,f,{upsert:false}).then(function(u){ if(u.error){ status('err','Upload: '+u.error.message); doInsert(null); return; } var pub=sb.storage.from('photos').getPublicUrl(path); doInsert(pub.data.publicUrl); });
+        } else { doInsert(null); }
+      };
     });
   }
 
