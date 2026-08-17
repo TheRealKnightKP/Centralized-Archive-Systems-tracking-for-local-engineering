@@ -1,5 +1,5 @@
 /* CASTLE service worker — basic offline shell. Data always fetched fresh (no-store). */
-const CACHE = 'castle-v2.2';
+const CACHE = 'castle-v2.3';
 const SHELL = ['./', './index.html', './manifest.json'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(()=>self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())); });
@@ -20,5 +20,6 @@ V1.1: Supabase DB entries, timeline horizontal, added edit, add, delete, to entr
 V1.2: Fixing update errors
 V1.3: Fixing update errors 2 electric bogaloo Sat, Aug 15
 V2: UI rework Sun, Aug 16
-V2.1: Fixed UI bugs, added Pauldron loading screen and transitions
-V2.2: Fixed Pauldron animation loading screen 
+V2.1: Fixed UI bugs, added Pauldron loading screen and transitions Mon Aug 17
+V2.2: Fixed Pauldron animation loading screen Mon Aug 17
+V2.3: Fixing Pauldron animation again Mon Aug 17
