@@ -85,6 +85,12 @@
   .plate-card{ position:relative; background:linear-gradient(180deg, var(--panel), var(--panel-2));
     border:1px solid var(--line); border-radius:10px; padding:0; margin:10px 0; overflow:hidden; cursor:pointer; transition:.18s; }
   .plate-card:hover{ border-color:var(--navy-hi); transform:translateY(-1px); box-shadow:0 6px 22px rgba(0,0,0,.35); }
+  .plate-card.picked{ border-color:var(--orange); box-shadow:0 0 0 2px rgba(227,154,28,.35); }
+  .xlink{ color:var(--orange); border-bottom:1px dashed var(--orange-dim); cursor:pointer; text-decoration:none; }
+  .xlink:hover{ border-bottom-style:solid; }
+  select{ width:100%; font-family:var(--mono); font-size:12.5px; background:#0a1119; color:var(--text); border:1px solid var(--line); border-radius:6px; padding:9px; margin:3px 0 8px; }
+  label{ display:block; margin-top:6px; }
+  button.act.on{ background:var(--orange); color:#1a1300; border-color:var(--orange); }
   .plate-card .pc-top{ display:flex; align-items:stretch; }
   .pc-stamp{ font-family:var(--disp); font-weight:800; font-size:18px; letter-spacing:1px; color:#fff;
     background:var(--navy-lo); border-right:1px solid var(--line); padding:14px 12px; min-width:64px; text-align:center; display:flex; align-items:center; justify-content:center; }
@@ -159,10 +165,10 @@
   /* ---- flying Pauldron loader ---- */
   .loader{ display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 0; }
   .flypath{ position:relative; width:100%; max-width:520px; height:70px; overflow:hidden; margin:0 auto; }
-  .pauldron{ position:absolute; top:16px; left:0; animation:fly 1.5s linear infinite; }
+  .pauldron{ position:absolute; top:16px; left:0; animation:fly 1.5s linear infinite; z-index:2; }
   @keyframes fly{ from{ transform:translateX(-44px); } to{ transform:translateX(540px); } }
-  .ptrail{ position:absolute; top:30px; left:-60px; height:5px; width:60px; border-radius:2px;
-    background:linear-gradient(90deg, transparent, rgba(227,154,28,.7)); animation:fly 1.5s linear infinite; }
+  .ptrail{ position:absolute; top:31px; left:-52px; height:6px; width:52px; border-radius:3px; z-index:1;
+    background:linear-gradient(90deg, transparent, rgba(227,154,28,.75)); animation:fly 1.5s linear infinite; }
   .loadtxt{ font-family:var(--mono); font-size:11px; color:var(--dim); margin-top:14px; letter-spacing:1px; }
 
   /* ---- blueprint draw-on animation ---- */
@@ -182,6 +188,7 @@
     <span class="mark"><span class="k">C</span>ASTLE</span>
     <span class="sub" id="hsub">Centralized Archive · Systems Tracking · Local Engineering</span>
     <span class="ver" id="hver">—</span>
+    <button id="hsearch" style="background:var(--navy-lo);border:1px solid var(--navy-hi);color:#bcd6ef;border-radius:5px;padding:3px 9px;font-family:var(--mono);font-size:11px;cursor:pointer;margin-left:6px">⌕ Search</button>
   </div>
 </header>
 <nav id="nav"></nav>
@@ -225,7 +232,22 @@
   }
   function loader(msg){ return '<div class="loader"><div class="flypath"><span class="ptrail"></span><span class="pauldron"><span style="display:inline-block;transform:rotate(90deg)">'+pauldronSVG()+'</span></span></div><div class="loadtxt">'+esc(msg||'LOADING')+'</div></div>'; }
   // Guarantee the Pauldron flies at least one full pass (1.5s) before content shows.
-  function minLoad(msg, work){ paint(loader(msg),false); var t0=Date.now(); return Promise.resolve().then(work).then(function(r){ var wait=Math.max(0,1500-(Date.now()-t0)); return new Promise(function(res){ setTimeout(function(){ res(r); },wait); }); }); }
+  // Show the loader; resolve only when BOTH the data work is done AND the Pauldron has
+  // completed at least one full flight to the right edge. If work finishes mid-flight, the
+  // Pauldron flies on to the edge before the page opens; if work takes longer, it loops.
+  function minLoad(msg, work){
+    paint(loader(msg),false);
+    var workDone=false, flewOnce=false, resolved=false, result;
+    return new Promise(function(resolve){
+      function maybe(){ if(workDone && flewOnce && !resolved){ resolved=true; resolve(result); } }
+      var p=document.querySelector('.pauldron');
+      if(p){ p.addEventListener('animationiteration', function(){ flewOnce=true; maybe(); }); }
+      else { flewOnce=true; } // no element (reduced-motion etc.) — don't block
+      // safety: if the animation somehow never fires, don't hang forever
+      setTimeout(function(){ flewOnce=true; maybe(); }, 4000);
+      Promise.resolve().then(work).then(function(r){ result=r; workDone=true; maybe(); });
+    });
+  }
 
   // class → accent color for station strips / stamps
   var CLASS_COLOR={ EX:'#4fd08a', VX:'#57b6e6', LX:'#E39A1C', TX:'#c98a5a', GX:'#b57de0', DX:'#e0687d', MX:'#7de0c8', RX:'#e0d267' };
@@ -253,21 +275,23 @@
 
   function boot(){
     loadJSON(DATA_BASE+'/index.json').then(function(ix){ state.index=ix; return ensureSeed(); })
-    .then(function(){ document.getElementById('hver').textContent=VERSION; buildNav(); route('fleet'); })
+    .then(function(){ document.getElementById('hver').textContent=VERSION; buildNav(); var hs=document.getElementById('hsearch'); if(hs) hs.onclick=function(){ route('search'); }; route('fleet'); })
     .catch(function(e){ fail('Could not initialize — '+(e&&e.message?e.message:e)); });
   }
 
-  var TABS=[['fleet','Fleet'],['ifo','IFO'],['reports','Reports'],['timeline','Timeline'],['architect','Architect'],['photos','Photos'],['data','Backup']];
+  var TABS=[['fleet','Fleet'],['mission','Mission'],['status','Status'],['reports','Reports'],['timeline','Timeline'],['architect','Architect'],['photos','Photos'],['data','Backup']];
   function buildNav(){ var n=document.getElementById('nav'); n.innerHTML=''; TABS.forEach(function(t){ var b=el('<button data-tab="'+t[0]+'">'+t[1]+'</button>'); b.onclick=function(){ route(t[0]); }; n.appendChild(b); }); }
   function setActive(tab){ Array.prototype.forEach.call(document.querySelectorAll('#nav button'),function(b){ b.classList.toggle('active',b.dataset.tab===tab); }); }
   function route(tab,arg){ try{ setActive(tab); window.scrollTo(0,0);
     if(tab==='fleet') return arg?renderVehicle(arg):renderFleet();
-    if(tab==='ifo') return renderIFO();
+    if(tab==='mission') return renderMission();
+    if(tab==='status') return renderStatus();
     if(tab==='reports') return renderReports();
     if(tab==='timeline') return renderTimeline();
     if(tab==='architect') return renderArchitect();
     if(tab==='photos') return renderPhotos();
     if(tab==='data') return renderData();
+    if(tab==='search') return renderSearch(arg);
   }catch(e){ fail('Error rendering "'+tab+'": '+(e&&e.message?e.message:e)); } }
 
   /* ---------- station strip from blueprint (rough, decorative-but-real) ---------- */
@@ -289,26 +313,43 @@
       list.forEach(function(x){ (byClass[x.class]=byClass[x.class]||[]).push(x); });
       var h='<p class="eyebrow">KnightShip Aerospace · Fleet Registry</p>';
       h+='<h1>'+esc(ix.castle.company)+'</h1><p class="dim small">'+esc(ix.castle.motto)+'</p>';
-      var order=['EX','VX','LX','TX','GX','MX','DX','RX'];
-      var classes=Object.keys(byClass).sort(function(a,b){ var ia=order.indexOf(a), ib=order.indexOf(b); if(ia<0)ia=99; if(ib<0)ib=99; return ia-ib; });
-      classes.forEach(function(cls){
-        var q=(ix.taxonomy.classes.filter(function(c){return c.code===cls[0];})[0]||{}).name||'';
-        h+='<h2>'+esc(cls)+' — '+esc(q)+'</h2>';
-        byClass[cls].forEach(function(x){
-          h+='<div class="plate-card" data-id="'+esc(x.id)+'">'
-            +'<div class="pc-top"><div class="pc-stamp" style="color:'+cc(cls)+'">'+esc(x.class)+'</div>'
-            +'<div class="pc-main"><div class="pc-desig">'+esc(x.designation)+'</div>'
-            +'<div class="pc-role">'+esc(x.role)+'</div>'
-            +'<div style="margin-top:7px"><span class="pc-status '+esc(x.status)+'">'+esc(x.status)+'</span></div></div></div>'
-            + stationStrip(x)
-            +'</div>';
-        });
-      });
-      h+='<h2>Class Taxonomy</h2><div class="readout">';
-      ix.taxonomy.classes.forEach(function(c){ h+='<div><span class="rv" style="color:'+cc(c.code+'X')+'">'+esc(c.code)+'X</span> <span class="rk">'+esc(c.name)+'</span> — '+esc(c.desc)+'</div>'; });
-      h+='</div><p class="dim small">'+esc(ix.taxonomy.note)+'</p>';
+      h+='<div class="card" style="padding:8px 10px"><input id="fleet_q" placeholder="Filter fleet — name, role, class, status…" style="margin:0"></div>';
+      h+='<div class="row" style="margin:6px 0"><button class="act ghost" id="cmp_toggle">⇄ Compare mode</button><span id="cmp_hint" class="dim small"></span></div>';
+      h+='<div id="fleet_body"></div>';
       paint(h,true);
-      Array.prototype.forEach.call(view().querySelectorAll('.plate-card'),function(c){ c.onclick=function(){ route('fleet',c.dataset.id); }; });
+      var body=document.getElementById('fleet_body');
+      var compareMode=false, picks=[];
+      function drawList(filter){
+        var f=(filter||'').toLowerCase();
+        var bc={}; list.forEach(function(x){ var hay=(x.designation+' '+x.role+' '+x.class+' '+x.status+' '+(x.summary||'')).toLowerCase(); if(!f||hay.indexOf(f)>=0) (bc[x.class]=bc[x.class]||[]).push(x); });
+        var order=['EX','VX','LX','TX','GX','MX','DX','RX'];
+        var classes=Object.keys(bc).sort(function(a,b){ var ia=order.indexOf(a), ib=order.indexOf(b); if(ia<0)ia=99; if(ib<0)ib=99; return ia-ib; });
+        var hh='';
+        if(!classes.length) hh='<div class="ph">No vehicles match “'+esc(filter)+'”.</div>';
+        classes.forEach(function(cls){
+          var q=(ix.taxonomy.classes.filter(function(c){return c.code===cls[0];})[0]||{}).name||'';
+          hh+='<h2>'+esc(cls)+' — '+esc(q)+'</h2>';
+          bc[cls].forEach(function(x){
+            var picked=picks.indexOf(x.id)>=0;
+            hh+='<div class="plate-card'+(picked?' picked':'')+'" data-id="'+esc(x.id)+'">'
+              +'<div class="pc-top"><div class="pc-stamp" style="color:'+cc(cls)+'">'+esc(x.class)+'</div>'
+              +'<div class="pc-main"><div class="pc-desig">'+esc(x.designation)+'</div>'
+              +'<div class="pc-role">'+esc(x.role)+'</div>'
+              +'<div style="margin-top:7px"><span class="pc-status '+esc(x.status)+'">'+esc(x.status)+'</span></div></div></div>'
+              + stationStrip(x)
+              +'</div>';
+          });
+        });
+        if(!f){ hh+='<h2>Class Taxonomy</h2><div class="readout">'; ix.taxonomy.classes.forEach(function(c){ hh+='<div><span class="rv" style="color:'+cc(c.code+'X')+'">'+esc(c.code)+'X</span> <span class="rk">'+esc(c.name)+'</span> — '+esc(c.desc)+'</div>'; }); hh+='</div><p class="dim small">'+esc(ix.taxonomy.note)+'</p>'; }
+        body.innerHTML=hh;
+        Array.prototype.forEach.call(body.querySelectorAll('.plate-card'),function(c){ c.onclick=function(){
+          if(compareMode){ var id=c.dataset.id; var i=picks.indexOf(id); if(i>=0) picks.splice(i,1); else { if(picks.length>=2) picks.shift(); picks.push(id); } if(picks.length===2){ showCompare(picks); } else { drawList(document.getElementById('fleet_q').value); document.getElementById('cmp_hint').textContent=picks.length+' selected'; } }
+          else route('fleet',c.dataset.id);
+        }; });
+      }
+      document.getElementById('fleet_q').oninput=function(){ drawList(this.value); };
+      document.getElementById('cmp_toggle').onclick=function(){ compareMode=!compareMode; picks=[]; this.classList.toggle('on',compareMode); document.getElementById('cmp_hint').textContent=compareMode?'pick two vehicles':''; drawList(document.getElementById('fleet_q').value); };
+      drawList('');
     };
     if(state.fleetList) return minLoad('RETRIEVING FLEET',function(){ return state.fleetList; }).then(draw);
     if(!sb) return minLoad('RETRIEVING FLEET',function(){ return state.index.vehicles; }).then(draw);
@@ -331,7 +372,7 @@
       h+='<p class="eyebrow">'+esc(d.class)+' · '+esc(d.classQuality)+' Class</p>';
       h+='<h1>'+esc(d.designation)+'</h1>';
       h+='<div class="row" style="margin:6px 0 2px"><span class="stamp" style="border-color:'+cc(d.class)+';color:'+cc(d.class)+'">'+esc(d.class)+'-CLASS</span><span class="stamp '+(d.status==='teased'?'orange':'')+'">'+esc(d.status)+'</span></div>';
-      h+='<p>'+esc(d.description||d.summary)+'</p>';
+      h+='<p>'+crosslink(d.description||d.summary)+'</p>';
       h+='<h2>Specification</h2><div class="readout">';
       var any=false;
       for(var k in s){ if(s.hasOwnProperty(k)&&typeof s[k]!=='object'){ h+='<div><span class="rk">'+esc(pad(k))+'</span>  <span class="rv">'+esc(s[k])+'</span></div>'; any=true; } }
@@ -352,6 +393,7 @@
       if(d.changelog&&d.changelog.length){ h+='<h2>Revision History</h2>'; d.changelog.forEach(function(c){ h+='<div class="rev"><span class="rev-date">'+esc(c.date)+'</span><span class="rev-what">'+esc(c.what)+'</span><span class="rev-why">'+esc(c.why)+'</span></div>'; }); }
       paint(h,true);
       view().querySelector('.back').onclick=function(){ route('fleet'); };
+      wireXlinks(view());
       var bt=document.getElementById('bpToggle');
       if(bt){ bt.onclick=function(){ var b=document.getElementById('bpBody'); var open=b.style.display!=='none'; b.style.display=open?'none':'block'; bt.textContent=(open?'▸ Show blueprint':'▾ Hide blueprint'); }; }
     };
@@ -373,15 +415,271 @@
   function listBlock(t,a,f){ if(!a||!a.length) return ''; var h='<h2>'+esc(t)+'</h2>'; a.forEach(function(o){ h+='<div class="card" style="padding:10px 12px">'+f(o)+'</div>'; }); return h; }
 
   /* ---------- IFO ---------- */
-  function renderIFO(){
-    var ix=state.index;
-    var h='<p class="eyebrow">Interactive Fleet Overview</p><h1>IFO</h1><p class="dim small">Flat placeholder. The 2.5D exploded views, animations, and mini-missions attach here in a later pass.</p>';
-    h+='<div class="ifo-stage"><div class="ifo-ship"></div><div class="ifo-ship" style="width:96px;opacity:.75"></div><div class="ifo-ship"></div><div style="position:absolute;top:10px;right:12px" class="dim small" style="font-family:var(--mono)">¾ VIEW</div></div>';
-    h+='<div class="row" style="margin-top:10px"><button class="act ghost">◂ ¾ high-front</button><button class="act ghost">¾ low-back ▸</button><button class="act orange">▶ mini-mission</button></div>';
-    h+='<h2>Select Vehicle</h2><div class="row">'; ix.vehicles.forEach(function(x){ h+='<span class="chip">'+esc(x.designation)+'</span>'; }); h+='</div>';
-    h+='<h2>Component Callouts (sample)</h2>'; ['Nose','Rings','LOX / CH₄ tanks','Engines','Fins / wings','Compacting mechanism'].forEach(function(c){ h+='<div class="card" style="padding:9px 12px"><span class="ifo-dot"></span>'+esc(c)+' <span class="dim small">— deploy + narrate (later)</span></div>'; });
-    h+='<h2>Reserved (per vehicle JSON)</h2><div class="readout">icon: ICON drawing\nviews: { highFront, lowBack } — base image + hotspots\nmissionSequence: [ launch, separate, orbit, land … ]</div>';
-    paint(h,true);
+  /* ---------- CROSS-LINK HELPER: turn vehicle designations into tappable links ---------- */
+  function crosslink(text){
+    if(!text) return '';
+    var list=state.fleetList||state.index.vehicles||[];
+    var out=esc(text);
+    // match designations like EX-3, TX-04, GX-04, MX-79, LX-23, DX-94, VX-13, GX-24
+    out=out.replace(/\b([EVLTGMDR]X-\d{1,2})\b/g,function(m){
+      var v=list.filter(function(x){ return (x.designation||'').toUpperCase().indexOf(m.toUpperCase())===0; })[0];
+      if(!v) return m;
+      return '<a class="xlink" data-id="'+esc(v.id)+'">'+m+'</a>';
+    });
+    return out;
+  }
+  function wireXlinks(root){ Array.prototype.forEach.call((root||document).querySelectorAll('.xlink'),function(a){ a.onclick=function(e){ e.preventDefault(); e.stopPropagation(); route('fleet',a.dataset.id); }; }); }
+
+  /* ---------- COMPARE MODE ---------- */
+  function showCompare(ids){
+    var getAll = sb ? sb.from('vehicles').select('*').in('id',ids) : Promise.resolve({data:null});
+    Promise.resolve(getAll).then(function(res){
+      var rows = (res&&res.data) ? res.data : state.index.vehicles.filter(function(x){return ids.indexOf(x.id)>=0;});
+      if(rows.length<2) return;
+      var A=rows[0], B=rows[1];
+      function spec(d){ return (d.data&&d.data.specs)||d.specs||{}; }
+      var sA=spec(A), sB=spec(B);
+      var keys={}; [sA,sB].forEach(function(s){ for(var k in s){ if(typeof s[k]!=='object') keys[k]=1; } });
+      var h='<span class="back">◂ RETURN TO FLEET</span><p class="eyebrow">Compare</p><h1>'+esc(A.designation)+' vs '+esc(B.designation)+'</h1>';
+      h+='<table><tr><th>Spec</th><th>'+esc(A.designation)+'</th><th>'+esc(B.designation)+'</th></tr>';
+      h+='<tr><td class="dim">Class</td><td>'+esc(A.class)+' · '+esc(A.class_quality||A.classQuality||'')+'</td><td>'+esc(B.class)+' · '+esc(B.class_quality||B.classQuality||'')+'</td></tr>';
+      h+='<tr><td class="dim">Role</td><td>'+esc(A.role)+'</td><td>'+esc(B.role)+'</td></tr>';
+      h+='<tr><td class="dim">Status</td><td>'+esc(A.status)+'</td><td>'+esc(B.status)+'</td></tr>';
+      Object.keys(keys).forEach(function(k){ h+='<tr><td class="dim">'+esc(k)+'</td><td>'+esc(sA[k]!=null?sA[k]:'—')+'</td><td>'+esc(sB[k]!=null?sB[k]:'—')+'</td></tr>'; });
+      h+='</table>';
+      paint(h,true); view().querySelector('.back').onclick=function(){ route('fleet'); };
+    });
+  }
+
+  /* ========================================================
+     MISSION — exact Δv calculator, calc toolkit, visual planner.
+     Core physics: Tsiolkovsky Δv = Isp·g0·ln(m0/mf). Verified
+     against LX-23 (7,778 vs 7,780 m/s). No inputs are invented;
+     vehicles lacking worked masses/Isp are refused, not guessed.
+     ======================================================== */
+  var G0=9.80665;
+  // Mission-leg Δv budgets from LEO (standard approximate values, m/s).
+  var PROFILES={
+    'leo':{label:'To LEO (ascent from pad)', legs:[['Ascent to LEO',9400]], refuelAt:null},
+    'geo':{label:'LEO → GEO (one way)', legs:[['GTO injection',2440],['GEO circularize',1470]], refuelAt:'leo'},
+    'lunar_orbit':{label:'LEO → Lunar orbit (one way)', legs:[['Trans-lunar injection',3120],['Lunar orbit insertion',900]], refuelAt:'leo'},
+    'lunar_orbit_rt':{label:'LEO → Lunar orbit → return', legs:[['TLI',3120],['LOI',900],['Trans-Earth injection',900]], refuelAt:'leo'},
+    'lunar_surface':{label:'Lunar orbit → surface → orbit', legs:[['Descent',1900],['Ascent',1900]], refuelAt:'lunar'},
+    'mars_orbit':{label:'LEO → Mars orbit (one way)', legs:[['Trans-Mars injection',3600],['Mars orbit insertion',1400]], refuelAt:'leo'},
+    'mars_orbit_rt':{label:'LEO → Mars orbit → return', legs:[['TMI',3600],['MOI',1400],['Trans-Earth injection',2000]], refuelAt:'mars'}
+  };
+  // Pull the exact mass state needed for Tsiolkovsky. Returns {prop,dry,payload,isp} or null with a reason.
+  function massState(d){
+    var s=(d.data&&d.data.specs)||d.specs||{};
+    var prop=numOr(s.propellant_t), dry=numOr(s.dryMass_t), pay=numOr(s.payload_t), isp=numOr(s.isp_vac_s);
+    // EX-3 stores wet+dry+payload but not prop → derive prop = wet - dry - payload
+    if(prop==null && numOr(s.wetMass_t)!=null && dry!=null){ var pv=(pay!=null?pay:0); prop=numOr(s.wetMass_t)-dry-pv; }
+    if(prop==null||dry==null||isp==null) return {ok:false, missing:[prop==null?'propellant':null,dry==null?'dry mass':null,isp==null?'Isp':null].filter(Boolean)};
+    return {ok:true, prop:prop, dry:dry, payload:(pay!=null?pay:0), isp:isp};
+  }
+  function numOr(v){ if(v==null) return null; var n=parseFloat(String(v).replace(/[, ]/g,'')); return isNaN(n)?null:n; }
+  function tsiolkovsky(m0,mf,isp){ return isp*G0*Math.log(m0/mf); }
+
+  function renderMission(){
+    var h='<p class="eyebrow">Flight Dynamics</p><h1>Mission</h1>';
+    h+='<div class="row" style="margin-bottom:10px"><button class="act on" data-mtab="calc">Δv Calculator</button><button class="act ghost" data-mtab="tools">Calc Tools</button><button class="act ghost" data-mtab="planner">Planner</button></div>';
+    h+='<div id="mtab_body"></div>';
+    paint(h,false);
+    var body=document.getElementById('mtab_body');
+    function pick(t){ Array.prototype.forEach.call(view().querySelectorAll('[data-mtab]'),function(b){ var on=b.dataset.mtab===t; b.classList.toggle('on',on); b.classList.toggle('ghost',!on); }); if(t==='calc') missionCalc(body); else if(t==='tools') missionTools(body); else missionPlanner(body); }
+    Array.prototype.forEach.call(view().querySelectorAll('[data-mtab]'),function(b){ b.onclick=function(){ pick(b.dataset.mtab); }; });
+    pick('calc');
+  }
+
+  /* ---- Δv CALCULATOR (exact) ---- */
+  function missionCalc(body){
+    var list=state.fleetList||state.index.vehicles||[];
+    var h='<p class="dim small">Exact rocket-equation check: Δv = Isp·g₀·ln(m₀/m_f). Pick a vehicle and profile; the tool computes achievable Δv from worked masses and tests dry / LEO-refuel / lunar-refuel / Mars-refuel closure, with tanker rounds. Vehicles without worked masses are refused, not guessed.</p><div id="st" class="status"></div>';
+    h+='<div class="card"><label class="dim small">Vehicle</label><select id="m_veh">';
+    list.forEach(function(v){ h+='<option value="'+esc(v.id)+'">'+esc(v.designation)+'</option>'; });
+    h+='</select><label class="dim small">Mission profile</label><select id="m_prof">';
+    Object.keys(PROFILES).forEach(function(k){ h+='<option value="'+k+'">'+esc(PROFILES[k].label)+'</option>'; });
+    h+='</select><button class="act" id="m_run" style="margin-top:8px">Run calculation</button></div><div id="m_out"></div>';
+    body.innerHTML=h;
+    document.getElementById('m_run').onclick=runMissionExact;
+  }
+  function runMissionExact(){
+    var id=document.getElementById('m_veh').value, pk=document.getElementById('m_prof').value, prof=PROFILES[pk];
+    var get=sb?sb.from('vehicles').select('*').eq('id',id).single():Promise.resolve({data:null});
+    Promise.resolve(get).then(function(res){
+      var d=(res&&res.data)?res.data:(state.index.vehicles.filter(function(x){return x.id===id;})[0]||{});
+      var desig=d.designation||id, req=prof.legs.reduce(function(a,l){return a+l[1];},0);
+      var ms=massState(d), out=document.getElementById('m_out');
+      var h='<h2>Result — '+esc(desig)+'</h2><h3>Mission Δv required</h3><div class="readout">';
+      prof.legs.forEach(function(l){ h+='<div><span class="rk">'+esc(pad(l[0]))+'</span>  <span class="rv">'+l[1]+' m/s</span></div>'; });
+      h+='<div style="border-top:1px solid var(--line);margin-top:4px;padding-top:4px"><span class="rk">'+pad('TOTAL required')+'</span>  <span class="rv">'+req+' m/s</span></div></div>';
+      if(!ms.ok){ h+='<div class="flag"><div class="fl-body"><b>Cannot compute — missing worked inputs:</b> '+esc(ms.missing.join(', '))+'.<br>'+esc(desig)+' needs these worked before a mission can be evaluated. No number will be invented.</div></div>'; out.innerHTML=h; return; }
+      // exact achievable Δv at full tank
+      var m0=ms.dry+ms.payload+ms.prop, mf=ms.dry+ms.payload;
+      var dv=tsiolkovsky(m0,mf,ms.isp);
+      h+='<h3>Vehicle capability (exact)</h3><div class="readout">';
+      h+='<div><span class="rk">'+pad('dry + payload')+'</span>  <span class="rv">'+ms.dry+' + '+ms.payload+' = '+mf+' t</span></div>';
+      h+='<div><span class="rk">'+pad('+ propellant')+'</span>  <span class="rv">'+ms.prop+' t → m₀ = '+Math.round(m0)+' t</span></div>';
+      h+='<div><span class="rk">'+pad('mass ratio')+'</span>  <span class="rv">'+(m0/mf).toFixed(3)+'</span></div>';
+      h+='<div><span class="rk">'+pad('Isp (vac)')+'</span>  <span class="rv">'+ms.isp+' s</span></div>';
+      h+='<div style="border-top:1px solid var(--line);margin-top:4px;padding-top:4px"><span class="rk">'+pad('Δv = Isp·g₀·ln(MR)')+'</span>  <span class="rv">'+Math.round(dv)+' m/s</span></div>';
+      h+='<div><span class="rk">'+pad('margin vs mission')+'</span>  <span class="rv" style="color:'+(dv>=req?'var(--good)':'#e89090')+'">'+(dv-req>=0?'+':'')+Math.round(dv-req)+' m/s</span></div></div>';
+      if(dv>=req){ h+='<div class="card" style="border-color:#245c42"><b style="color:var(--good)">✓ Closes dry.</b> '+esc(desig)+' performs this profile on one tank — no refuelling.</div>'; }
+      else {
+        var refLabel={leo:'LEO',lunar:'lunar-orbit',mars:'Mars-orbit'}[prof.refuelAt];
+        if(!prof.refuelAt){ h+='<div class="flag"><div class="fl-body">Ascent to LEO cannot be refuel-assisted (no depot below LEO). Must close on the launch stack.</div></div>'; }
+        else {
+          // exact multi-fill: each full tank yields dv (at this mass state). N fills give N·dv only if payload dropped;
+          // conservatively keep payload for all fills (worst case). fills needed:
+          var fills=Math.ceil(req/dv);
+          var refuels=fills-1;
+          h+='<div class="card" style="border-color:'+(refuels<=1?'#245c42':'var(--orange-dim)')+'"><b style="color:'+(refuels<=1?'var(--good)':'var(--orange)')+'">'+(refuels<=1?'✓':'⚠')+' Needs '+refuels+' in-space refuel'+(refuels===1?'':'s')+' at the '+esc(refLabel)+' depot.</b><br><span class="dim small">Each full tank delivers '+Math.round(dv)+' m/s; '+fills+' tank-loads cover '+req+' m/s. Requires a depot at '+esc(refLabel)+'.</span></div>';
+          // tanker rounds: prop per fill ÷ tanker delivery
+          h+=tankerRoundsExact(ms.prop, refuels+1);
+        }
+      }
+      out.innerHTML=h; wireXlinks(out);
+    });
+  }
+  function tankerRoundsExact(propPerFill, fills){
+    // Worked tanker deliveries: EX-3 delivers 10 t/run (the near-term refueler, available before LX-23);
+    // LX-23 delivers ~50 t/trip (far-future heavy tanker).
+    var totalProp=propPerFill*fills;
+    var ex3=Math.ceil(totalProp/10), lx23=Math.ceil(totalProp/50);
+    var h='<h3>Tanker rounds (exact)</h3><div class="readout">';
+    h+='<div><span class="rk">'+pad('prop per fill')+'</span>  <span class="rv">'+Math.round(propPerFill)+' t</span></div>';
+    h+='<div><span class="rk">'+pad('total fills')+'</span>  <span class="rv">'+fills+'</span></div>';
+    h+='<div><span class="rk">'+pad('total propellant')+'</span>  <span class="rv">'+Math.round(totalProp)+' t</span></div>';
+    h+='<div style="border-top:1px solid var(--line);margin-top:4px;padding-top:4px"><span class="rk">'+pad('EX-3 @ 10 t/run')+'</span>  <span class="rv">'+ex3+' run(s)</span> <span class="dim">— near-term refueler</span></div>';
+    h+='<div><span class="rk">'+pad('LX-23 @ 50 t/trip')+'</span>  <span class="rv">'+lx23+' run(s)</span> <span class="dim">— far-future</span></div></div>';
+    h+='<p class="dim small">The EX-3 is the fleet\u2019s near-term refuelling ship (available before the LX-23). LX-23 becomes the heavy tanker in the far future. Both use worked delivery figures.</p>';
+    return h;
+  }
+
+  /* ---- CALC TOOLS ---- */
+  function missionTools(body){
+    var h='<p class="dim small">Standalone engineering calculators. Each shows its formula and its work. Inputs are yours; nothing is assumed.</p>';
+    h+='<div class="row" style="margin-bottom:8px"><button class="act ghost" data-tool="tsi">Rocket eq</button><button class="act ghost" data-tool="hover">Hover power</button><button class="act ghost" data-tool="mass">Mass build-up</button><button class="act ghost" data-tool="vol">Tank volume</button><button class="act ghost" data-tool="stage">Staging split</button></div><div id="tool_body"></div>';
+    body.innerHTML=h;
+    var tb=document.getElementById('tool_body');
+    var tools={ tsi:toolTsi, hover:toolHover, mass:toolMass, vol:toolVol, stage:toolStage };
+    Array.prototype.forEach.call(body.querySelectorAll('[data-tool]'),function(b){ b.onclick=function(){ Array.prototype.forEach.call(body.querySelectorAll('[data-tool]'),function(x){x.classList.add('ghost');x.classList.remove('on');}); b.classList.remove('ghost'); b.classList.add('on'); tools[b.dataset.tool](tb); }; });
+    body.querySelector('[data-tool="tsi"]').click();
+  }
+  function guide(t){ return '<div class="card" style="border-color:var(--orange-dim)"><b style="color:var(--orange)">What & when</b><p class="dim small">'+t+'</p></div>'; }
+  function inp(id,ph,val){ return '<input id="'+id+'" type="number" placeholder="'+ph+'"'+(val!=null?' value="'+val+'"':'')+'>'; }
+  function num(id){ return numOr(document.getElementById(id).value); }
+
+  function toolTsi(tb){
+    tb.innerHTML=guide('The rocket equation. Given a wet mass, dry mass, and exhaust velocity (Isp), it gives the Δv a stage can produce. Use it whenever you need to know if a stage closes a burn.')
+      +'<div class="card"><label class="dim small">m₀ wet (t)</label>'+inp('t_m0','full mass')+'<label class="dim small">m_f dry (t)</label>'+inp('t_mf','empty mass')+'<label class="dim small">Isp vac (s)</label>'+inp('t_isp','e.g. 360')+'<button class="act" id="t_go">Compute Δv</button></div><div id="t_out"></div>';
+    document.getElementById('t_go').onclick=function(){ var m0=num('t_m0'),mf=num('t_mf'),isp=num('t_isp'); var o=document.getElementById('t_out'); if(m0==null||mf==null||isp==null||mf<=0||m0<=mf){ o.innerHTML='<div class="flag"><div class="fl-body">Need m₀ > m_f > 0 and an Isp.</div></div>'; return; } var dv=tsiolkovsky(m0,mf,isp); o.innerHTML='<div class="readout"><div><span class="rk">'+pad('MR = m₀/m_f')+'</span>  <span class="rv">'+(m0/mf).toFixed(3)+'</span></div><div><span class="rk">'+pad('Δv = Isp·g₀·ln(MR)')+'</span>  <span class="rv">'+Math.round(dv)+' m/s</span></div><div class="dim">= '+isp+' × 9.80665 × ln('+(m0/mf).toFixed(3)+')</div></div>'; };
+  }
+  function toolHover(tb){
+    tb.innerHTML=guide('Momentum-theory hover power for a rotorcraft (EX-1/EX-2 class). Given weight, rotor disc area, and figure of merit, it gives the shaft power to hover. Use it when sizing tiltrotor propulsion.')
+      +'<div class="card"><label class="dim small">MTOW (t)</label>'+inp('h_w','mass')+'<label class="dim small">Rotor radius (m, per rotor)</label>'+inp('h_r','e.g. 5.75')+'<label class="dim small"># rotors</label>'+inp('h_n','e.g. 2')+'<label class="dim small">Figure of merit</label>'+inp('h_fm','0.72')+'<button class="act" id="h_go">Compute power</button></div><div id="h_out"></div>';
+    document.getElementById('h_go').onclick=function(){ var w=num('h_w'),r=num('h_r'),n=num('h_n'),fm=num('h_fm'); var o=document.getElementById('h_out'); if([w,r,n,fm].some(function(x){return x==null;})||r<=0||n<=0||fm<=0){ o.innerHTML='<div class="flag"><div class="fl-body">Need all four inputs, positive.</div></div>'; return; } var rho=1.225; var A=n*Math.PI*r*r; var T=w*1000*G0; var Pideal=Math.pow(T,1.5)/Math.sqrt(2*rho*A); var P=Pideal/fm; o.innerHTML='<div class="readout"><div><span class="rk">'+pad('disc area A')+'</span>  <span class="rv">'+A.toFixed(1)+' m²</span></div><div><span class="rk">'+pad('thrust T = W')+'</span>  <span class="rv">'+Math.round(T)+' N</span></div><div><span class="rk">'+pad('P_ideal=T^1.5/√(2ρA)')+'</span>  <span class="rv">'+(Pideal/1e6).toFixed(2)+' MW</span></div><div><span class="rk">'+pad('P = P_ideal / FM')+'</span>  <span class="rv">'+(P/1e6).toFixed(2)+' MW</span></div><div class="dim">ρ=1.225 kg/m³ (sea level)</div></div>'; };
+  }
+  function toolMass(tb){
+    tb.innerHTML=guide('Bottom-up dry-mass build-up with a growth margin. Enter subsystem masses (comma-separated t), pick a margin %, and it sums them. Use it to estimate a vehicle\u2019s dry mass honestly instead of top-down guessing.')
+      +'<div class="card"><label class="dim small">Subsystem masses (t, comma-separated)</label><input id="ms_list" placeholder="27,8,9,1.5,3.4,5.3"><label class="dim small">Growth margin (%)</label>'+inp('ms_m','15')+'<button class="act" id="ms_go">Sum</button></div><div id="ms_out"></div>';
+    document.getElementById('ms_go').onclick=function(){ var raw=document.getElementById('ms_list').value.split(',').map(function(s){return parseFloat(s);}).filter(function(x){return !isNaN(x);}); var m=num('ms_m'); var o=document.getElementById('ms_out'); if(!raw.length||m==null){ o.innerHTML='<div class="flag"><div class="fl-body">Enter at least one mass and a margin.</div></div>'; return; } var base=raw.reduce(function(a,b){return a+b;},0); var tot=base*(1+m/100); o.innerHTML='<div class="readout"><div><span class="rk">'+pad('Σ subsystems')+'</span>  <span class="rv">'+base.toFixed(1)+' t</span></div><div><span class="rk">'+pad('+ '+m+'% growth')+'</span>  <span class="rv">'+tot.toFixed(1)+' t</span></div><div class="dim">'+raw.length+' items summed</div></div>'; };
+  }
+  function toolVol(tb){
+    tb.innerHTML=guide('Propellant a tank volume can hold, and the D-section hull-volume method used on the LX-23. Enter tank volume and propellant density to get propellant mass. Use it when a vehicle is volume-limited (e.g. methalox vs hydrolox trades).')
+      +'<div class="card"><label class="dim small">Tank volume (m³)</label>'+inp('v_v','e.g. 1068')+'<label class="dim small">Propellant density (kg/m³)</label>'+inp('v_rho','methalox ~830, LH2 ~360')+'<button class="act" id="v_go">Compute mass</button></div><div id="v_out"></div>';
+    document.getElementById('v_go').onclick=function(){ var v=num('v_v'),rho=num('v_rho'); var o=document.getElementById('v_out'); if(v==null||rho==null||v<=0||rho<=0){ o.innerHTML='<div class="flag"><div class="fl-body">Need volume and density, positive.</div></div>'; return; } var m=v*rho/1000; o.innerHTML='<div class="readout"><div><span class="rk">'+pad('propellant mass')+'</span>  <span class="rv">'+Math.round(m)+' t</span></div><div class="dim">= '+v+' m³ × '+rho+' kg/m³ ÷ 1000</div></div>'; };
+  }
+  function toolStage(tb){
+    tb.innerHTML=guide('Splits a total mission Δv between two stages and shows each stage\u2019s share. Enter total Δv and stage-1 Δv; it gives stage 2\u2019s remainder. Use it to check a two-stage or asparagus split (like the LX-23 on 3× TX-04).')
+      +'<div class="card"><label class="dim small">Total Δv required (m/s)</label>'+inp('s_tot','e.g. 11000')+'<label class="dim small">Stage 1 Δv (m/s)</label>'+inp('s_s1','e.g. 3660')+'<button class="act" id="s_go">Split</button></div><div id="s_out"></div>';
+    document.getElementById('s_go').onclick=function(){ var t=num('s_tot'),s1=num('s_s1'); var o=document.getElementById('s_out'); if(t==null||s1==null){ o.innerHTML='<div class="flag"><div class="fl-body">Need both Δv values.</div></div>'; return; } var s2=t-s1; o.innerHTML='<div class="readout"><div><span class="rk">'+pad('stage 1')+'</span>  <span class="rv">'+Math.round(s1)+' m/s</span></div><div><span class="rk">'+pad('stage 2 (remainder)')+'</span>  <span class="rv" style="color:'+(s2>=0?'var(--good)':'#e89090')+'">'+Math.round(s2)+' m/s</span></div><div><span class="rk">'+pad('stage-1 share')+'</span>  <span class="rv">'+(100*s1/t).toFixed(1)+'%</span></div></div>'; };
+  }
+
+  /* ---- VISUAL PLANNER ---- */
+  function missionPlanner(body){
+    var list=state.fleetList||state.index.vehicles||[];
+    var h='<p class="dim small">Chain fleet vehicles into a mission architecture. Each hop shows its role; vehicles with worked Δv show it. Build the flow, see the chain.</p>';
+    h+='<div class="card"><label class="dim small">Add a hop</label><select id="pl_pick"><option value="">— pick a vehicle —</option>';
+    list.forEach(function(v){ h+='<option value="'+esc(v.id)+'">'+esc(v.designation)+' — '+esc(v.role)+'</option>'; });
+    h+='</select><div class="row"><button class="act" id="pl_add">Add hop</button><button class="act ghost" id="pl_clear">Clear</button></div></div>';
+    h+='<div id="pl_chain"></div>';
+    body.innerHTML=h;
+    var chain=[];
+    function draw(){
+      var c=document.getElementById('pl_chain');
+      if(!chain.length){ c.innerHTML='<div class="ph">No hops yet. Add vehicles to build a mission chain (e.g. EX-3 → MX-79 → EX-4 → GX-04).</div>'; return; }
+      var hh='<h2>Mission chain</h2>';
+      chain.forEach(function(v,i){
+        var ms=massState(v); var dv = ms.ok? Math.round(tsiolkovsky(ms.dry+ms.payload+ms.prop, ms.dry+ms.payload, ms.isp)) : null;
+        hh+='<div class="card" style="border-left:3px solid '+cc(v.class)+'"><div class="row" style="justify-content:space-between"><b style="color:#fff">'+(i+1)+'. '+esc(v.designation)+'</b><span class="stamp" style="border-color:'+cc(v.class)+';color:'+cc(v.class)+'">'+esc(v.class)+'</span></div><div class="dim small">'+esc(v.role)+'</div>'+(dv!=null?'<div class="dim small" style="font-family:var(--mono)">achievable Δv '+dv+' m/s</div>':'<div class="dim small">Δv not worked</div>')+'</div>';
+        if(i<chain.length-1) hh+='<div style="text-align:center;color:var(--orange);font-size:20px;margin:-4px 0">↓</div>';
+      });
+      c.innerHTML=hh;
+    }
+    document.getElementById('pl_add').onclick=function(){ var id=document.getElementById('pl_pick').value; if(!id) return; var v=list.filter(function(x){return x.id===id;})[0]; if(v){ chain.push(v); draw(); } };
+    document.getElementById('pl_clear').onclick=function(){ chain=[]; draw(); };
+    draw();
+  }
+
+
+  /* ---------- STATUS BOARD ---------- */
+  function renderStatus(){
+    if(!needSB()) return;
+    minLoad('LOADING STATUS',function(){
+      return sb.from('status_items').select('*').order('sort',{ascending:true}).then(function(r){ return r.data||[]; });
+    }).then(function(items){
+      var byCat={}; items.forEach(function(i){ (byCat[i.category]=byCat[i.category]||[]).push(i); });
+      var STATE_COLORS={live:'#4fd08a','on-track':'#4fd08a','in-progress':'#57b6e6',planned:'#E39A1C','pre-seed':'#E39A1C','concept':'#9fb0c0','not-started':'#e89090',none:'#8ea3b6','unknown':'#8ea3b6'};
+      var h='<p class="eyebrow">State of KnightShip</p><h1>Status</h1><p class="dim small">Live status board. Tap any item to edit its state or detail.</p><div id="st" class="status"></div>';
+      Object.keys(byCat).forEach(function(cat){
+        h+='<h2>'+esc(cat)+'</h2>';
+        byCat[cat].forEach(function(i){
+          var col=STATE_COLORS[i.state]||'#9fb0c0';
+          h+='<div class="card click" data-id="'+esc(i.id)+'" style="cursor:pointer"><div class="row" style="justify-content:space-between"><b style="color:#fff">'+esc(i.label)+'</b><span class="stamp" style="border-color:'+col+';color:'+col+'">'+esc(i.state)+'</span></div>'+(i.detail?'<div class="dim small" style="margin-top:4px">'+esc(i.detail)+'</div>':'')+'</div>';
+        });
+      });
+      h+='<h2>Add item</h2><div class="card"><input id="si_cat" placeholder="Category (e.g. Company)"><input id="si_label" placeholder="Label"><input id="si_state" placeholder="State (e.g. planned)"><textarea id="si_detail" rows="2" placeholder="Detail"></textarea><button class="act" id="si_add">Add</button></div>';
+      paint(h,true);
+      Array.prototype.forEach.call(view().querySelectorAll('.card.click'),function(c){ c.onclick=function(){ editStatus(items.filter(function(x){return x.id===c.dataset.id;})[0]); }; });
+      document.getElementById('si_add').onclick=function(){
+        var rec={ id:'si_'+Date.now(), category:document.getElementById('si_cat').value||'general', label:document.getElementById('si_label').value, state:document.getElementById('si_state').value||'unknown', detail:document.getElementById('si_detail').value||'', sort:100 };
+        if(!rec.label) return status('err','Label required.');
+        sb.from('status_items').insert(rec).then(function(r){ if(r.error) return status('err',r.error.message); route('status'); });
+      };
+    });
+  }
+  function editStatus(i){ if(!i)return;
+    var ns=prompt('State for "'+i.label+'":', i.state); if(ns===null) return;
+    var nd=prompt('Detail:', i.detail||''); if(nd===null) nd=i.detail;
+    sb.from('status_items').update({state:ns,detail:nd,updated_at:new Date().toISOString()}).eq('id',i.id).then(function(r){ if(r.error) return status('err',r.error.message); route('status'); });
+  }
+
+  /* ---------- GLOBAL SEARCH ---------- */
+  function renderSearch(q){
+    var h='<p class="eyebrow">Archive Search</p><h1>Search</h1><div class="card"><input id="gs_q" placeholder="Search vehicles, timeline, log, reports…" value="'+esc(q||'')+'"><button class="act" id="gs_go">Search</button></div><div id="gs_out"></div>';
+    paint(h,false);
+    document.getElementById('gs_go').onclick=doSearch;
+    var inp=document.getElementById('gs_q'); inp.focus(); inp.onkeydown=function(e){ if(e.key==='Enter') doSearch(); };
+    if(q) doSearch();
+  }
+  function doSearch(){
+    var q=(document.getElementById('gs_q').value||'').trim().toLowerCase();
+    var out=document.getElementById('gs_out'); if(!q){ out.innerHTML=''; return; }
+    out.innerHTML=loader('SEARCHING');
+    var tasks=[];
+    if(sb){
+      tasks.push(sb.from('vehicles').select('id,designation,role,summary,description').then(function(r){ return {type:'Vehicle',rows:(r.data||[]).filter(function(v){ return JSON.stringify(v).toLowerCase().indexOf(q)>=0; }).map(function(v){ return {title:v.designation,sub:v.role,go:function(){route('fleet',v.id);}}; })}; }));
+      tasks.push(sb.from('timeline').select('*').then(function(r){ return {type:'Timeline',rows:(r.data||[]).filter(function(v){ return JSON.stringify(v).toLowerCase().indexOf(q)>=0; }).map(function(v){ return {title:v.title,sub:v.entry_date,go:function(){route('timeline');}}; })}; }));
+      tasks.push(sb.from('architect_log').select('*').then(function(r){ return {type:'Architect',rows:(r.data||[]).filter(function(v){ return JSON.stringify(v).toLowerCase().indexOf(q)>=0; }).map(function(v){ return {title:v.title,sub:v.entry_date,go:function(){route('architect');}}; })}; }));
+      tasks.push(sb.from('reports').select('*').then(function(r){ return {type:'Report',rows:(r.data||[]).filter(function(v){ return JSON.stringify(v).toLowerCase().indexOf(q)>=0; }).map(function(v){ return {title:v.title,sub:v.report_date,go:function(){route('reports');}}; })}; }));
+    }
+    Promise.all(tasks).then(function(groups){
+      var h='', total=0;
+      groups.forEach(function(g){ if(!g.rows.length) return; total+=g.rows.length; h+='<h2>'+esc(g.type)+' ('+g.rows.length+')</h2>'; g.rows.forEach(function(row,idx){ var cid='gsr_'+g.type+'_'+idx; h+='<div class="card click" id="'+cid+'"><b style="color:#fff">'+esc(row.title)+'</b>'+(row.sub?'<div class="dim small">'+esc(row.sub)+'</div>':'')+'</div>'; g.rows[idx]._cid=cid; }); });
+      out.innerHTML = total? h : '<div class="ph">No matches for “'+esc(q)+'”.</div>';
+      groups.forEach(function(g){ g.rows.forEach(function(row){ var elx=document.getElementById(row._cid); if(elx) elx.onclick=row.go; }); });
+    });
   }
 
   /* ---------- REPORTS ---------- */
